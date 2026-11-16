@@ -26,5 +26,6 @@ node test.js
 ## Archivos
 
 - `engine.js`: lógica de entrenamiento (rutinas, progresión de cargas, rachas, calentamiento, discos).
+- `coach.js`: entrenador (nutrición, check-in de preparación, análisis del progreso, técnica y guía con fuentes).
 - `index.html`: interfaz.
 - `sw.js`, `manifest.webmanifest`, `icon.svg`: PWA instalable y offline.

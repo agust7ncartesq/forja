@@ -1,7 +1,7 @@
 // Service worker: la app funciona sin conexión en el gimnasio.
 // Sube la versión al publicar cambios para que los móviles descarguen la nueva.
-const CACHE = 'forja-v3';
-const FILES = ['./', './index.html', './engine.js', './manifest.webmanifest', './icon.svg', './assets/hero.jpg', './assets/athlete.jpg'];
+const CACHE = 'forja-v4';
+const FILES = ['./', './index.html', './engine.js', './coach.js', './manifest.webmanifest', './icon.svg', './assets/hero.jpg', './assets/athlete.jpg'];
 
 self.addEventListener('install', (e) => e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting())));
 self.addEventListener('activate', (e) => e.waitUntil(

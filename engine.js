@@ -145,7 +145,7 @@ const WT = (() => {
     const p = S.profile, day = S.plan[S.next % S.plan.length], deload = isDeload(p, today);
     const exercises = day.exercises.map((ex) => {
       const [name, muscle, , eq] = EX[ex.id], w = weightFor(ex, S.lifts[ex.id], p);
-      return { ...ex, name, muscle, eq, sets: deload ? Math.ceil(ex.sets / 2) : ex.sets, w: deload && w ? roundW(ex.id, w * 0.9) : w };
+      return { ...ex, name, muscle, eq, sets: deload ? Math.ceil(ex.sets / 2) : ex.sets, w: deload && w ? roundW(ex.id, w * 0.9) : w, w0: w };
     });
     return { ...day, exercises, deload, week: weekOf(p, today) };
   }
@@ -158,13 +158,20 @@ const WT = (() => {
     return eq === 'db' ? `${w} kg por mano` : `${w} kg`;
   }
 
-  function progress(ex, w, lift, reps, p, deload) {
+  // extra.rir: reps en reserva de la última serie (4 = 4 o más); extra.pain: molestia marcada.
+  // deload: true (semana de descarga) o 'light' (sesión ligera por baja recuperación).
+  function progress(ex, w, lift, reps, p, deload, extra = {}) {
     const e1rm = Math.max(lift.e1rm || 0, w ? Math.max(...reps.map((r) => e1rmOf(w, r))) : 0);
-    if (deload) return { e1rm, fails: lift.fails || 0, w: lift.w ?? w, kind: 'hold', msg: 'Semana de descarga: el peso no sube esta semana para que recuperes.' };
+    const kept = lift.w ?? ex.w0 ?? w; // en sesiones reducidas, conserva el peso planificado
+    if (extra.pain) return { e1rm, fails: lift.fails || 0, w: Math.min(w, kept), kind: 'hold', msg: `Marcaste molestia: el peso no sube. Prueba una alternativa que no duela y, si el dolor sigue o es agudo, consulta a un profesional de la salud.` };
+    if (deload === 'light') return { e1rm, fails: lift.fails || 0, w: kept, kind: 'hold', msg: 'Sesión ligera por baja recuperación: tu peso de trabajo no cambia.' };
+    if (deload) return { e1rm, fails: lift.fails || 0, w: kept, kind: 'hold', msg: 'Semana de descarga: el peso no sube esta semana para que recuperes.' };
     const thr = p.level === 'principiante' ? Math.ceil((ex.lo + ex.hi) / 2) : ex.hi;
+    const rir = extra.rir;
     if (reps.length >= ex.sets && reps.every((r) => r >= thr)) {
-      const nw = roundW(ex.id, w + inc(ex.id, p));
-      return { e1rm, fails: 0, w: nw, kind: 'up', msg: `Completaste todas las series. Próxima sesión: ${load(ex.id, nw)} (+${+(nw - w).toFixed(1)} kg).` };
+      const big = rir >= 3 && p.level !== 'avanzado'; // sobraban reps: salto doble
+      const nw = roundW(ex.id, w + inc(ex.id, p) * (big ? 2 : 1));
+      return { e1rm, fails: 0, w: nw, kind: 'up', msg: `${big ? 'Completaste todas las series y te sobraban reps.' : 'Completaste todas las series.'} Próxima sesión: ${load(ex.id, nw)} (+${+(nw - w).toFixed(1)} kg).` };
     }
     if (reps.some((r) => r < ex.lo)) {
       const fails = (lift.fails || 0) + 1;
@@ -174,17 +181,18 @@ const WT = (() => {
       }
       return { e1rm, fails, w, kind: 'hold', msg: `Alguna serie quedó por debajo de ${ex.lo} reps. Repite ${load(ex.id, w)}; si vuelve a pasar, bajaremos el peso un 10%.` };
     }
+    if (rir >= 3) return { e1rm, fails: 0, w, kind: 'hold', msg: `Repite ${load(ex.id, w)}, pero te quedaban ${rir === 4 ? '4 o más' : rir} reps en reserva: acércate más al fallo (deja 1 o 2) para progresar más rápido.` };
     return { e1rm, fails: 0, w, kind: 'hold', msg: `Repite ${load(ex.id, w)}. Cuando hagas ${thr} reps en todas las series, subirá el peso.` };
   }
 
-  function applySession(S, ses, repsByEx, today) {
+  function applySession(S, ses, repsByEx, today, opts = {}) {
     const out = [];
     ses.exercises.forEach((ex, i) => {
       const reps = (repsByEx[i] || []).slice(0, ex.sets).filter((v) => v !== '' && v != null).map(Number);
       if (!reps.length) return;
       const prev = S.lifts[ex.id] || {};
-      const r = progress(ex, ex.w, prev, reps, S.profile, ses.deload);
-      const log = [...(prev.log || []), { d: today, w: ex.w, r: reps }].slice(-30);
+      const r = progress(ex, ex.w, prev, reps, S.profile, ses.deload || (ses.light && 'light'), { rir: opts.rir && opts.rir[i], pain: opts.pain && opts.pain[i] });
+      const log = [...(prev.log || []), { d: today, w: ex.w, r: reps, ...(opts.rir && opts.rir[i] != null ? { rir: opts.rir[i] } : {}), ...(opts.pain && opts.pain[i] ? { pain: true } : {}) }].slice(-30);
       const pr = !!(prev.log && prev.log.length && r.e1rm > (prev.e1rm || 0));
       S.lifts[ex.id] = { w: r.w, hi: ex.hi, fails: r.fails, e1rm: Math.round(r.e1rm * 10) / 10, log };
       out.push({ name: ex.name, kind: r.kind, msg: r.msg, pr, e1rm: Math.round(r.e1rm) });
@@ -242,6 +250,6 @@ const WT = (() => {
   const group = (id) => EX[id][1].split('/')[0].split(' (')[0];
   const alternatives = (id) => Object.keys(EX).filter((k) => k !== id && group(k) === group(id) && EX[k][2] === EX[id][2]);
 
-  return { EX, GOALS, GUIDE, PRINCIPLES, buildPlan, nextSession, progress, applySession, streaks, weeklySets, startWeight, plates, warmup, alternatives, dnum };
+  return { EX, GOALS, GUIDE, PRINCIPLES, buildPlan, nextSession, progress, applySession, streaks, weeklySets, startWeight, plates, warmup, alternatives, dnum, roundW, isDeload };
 })();
 if (typeof module !== 'undefined') module.exports = WT;

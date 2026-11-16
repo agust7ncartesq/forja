@@ -64,4 +64,34 @@ S2.next = 0;
 const s2 = WT.nextSession(S2, '2026-01-07');
 assert.strictEqual(WT.applySession(S2, s2, { 0: [12, 12, 12] }, '2026-01-07')[0].pr, true);
 
+// RIR y molestias en la progresión
+r = WT.progress(ex, 60, {}, [10, 10, 10], p, false, { rir: 3 });
+assert.strictEqual(r.w, 65); // sobraban reps: salto doble
+r = WT.progress(ex, 60, {}, [9, 8, 8], p, false, { rir: 4 });
+assert(r.kind === 'hold' && /reserva/.test(r.msg));
+r = WT.progress(ex, 60, { w: 60 }, [10, 10, 10], p, false, { pain: true });
+assert(r.kind === 'hold' && r.w === 60);
+r = WT.progress(ex, 55, { w: 60 }, [10, 10, 10], p, 'light');
+assert.strictEqual(r.w, 60); // sesión ligera no cambia el peso de trabajo
+r = WT.progress({ ...ex, w0: 60 }, 55, {}, [10, 10, 10], p, 'light');
+assert.strictEqual(r.w, 60); // ejercicio nuevo: guarda el peso planificado, no el reducido
+
+// Coach
+const C = require('./coach.js');
+const n = C.nutrition({ ...p, age: 30, height: 180, bw: 80, goal: 'definicion', days: 4, minutes: 60 });
+assert.strictEqual(n.bmr, 1780); // Mifflin-St Jeor: 800 + 1125 - 150 + 5
+assert(n.kcal < n.tdee && n.tdee - n.kcal <= 510 && n.protein === 176);
+assert.strictEqual(C.nutrition({ ...p }), null); // sin edad ni altura
+assert.strictEqual(C.readiness({ sleep: 8, energy: 5, soreness: 1, stress: 1 }).level, 'alta');
+assert.strictEqual(C.readiness({ sleep: 4, energy: 1, soreness: 5, stress: 5 }).level, 'baja');
+const lowR = C.readiness({ sleep: 4, energy: 1, soreness: 5, stress: 5 });
+const adj = C.adjustSession({ exercises: [{ id: 'bench', sets: 3, w: 60 }] }, lowR);
+assert(adj.light && adj.exercises[0].sets === 2 && adj.exercises[0].w === 55);
+const tr = C.bwTrend([{ d: '2026-01-01', kg: 80 }, { d: '2026-01-09', kg: 79 }], '2026-01-10');
+assert.strictEqual(tr.pct, -1.2); // (79-80)/80 = -1,25 %
+// Estancamiento: 5 sesiones sin superar la mejor marca
+const Sx = { profile: p, plan: WT.buildPlan(p), sessions: [], lifts: { bench: { log: [8, 10, 9, 9, 8].map((r) => ({ d: '2026-01-05', w: 60, r: [r] })) } } };
+assert(C.insights(Sx, '2026-01-20').some((i) => /Estancado/.test(i.title)));
+assert(Object.keys(WT.EX).every((id) => C.CUES[id])); // técnica para todos los ejercicios
+
 console.log('OK: todos los tests pasan');

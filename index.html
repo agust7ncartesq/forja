@@ -19,6 +19,7 @@
   --lime:#d4f564;--ink:#0b0d08;--live:#ff5a4e;--ok:#9be15d;--warn:#ffb547;
   --legs:#5cb8e6;--push:#f07ab4;--pull:#a88cf0;--core:#4fd1b0;
   --font:Manrope,system-ui,-apple-system,sans-serif;
+  color-scheme:dark;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{background:var(--bg)}
@@ -79,6 +80,27 @@ input,select{caret-color:var(--lime);accent-color:var(--lime)}
 .dot{display:inline-flex;align-items:center;gap:8px}
 .legend{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
 .lowv{color:var(--warn);font-weight:800}
+.effort{margin-top:12px}
+.seg.sm span{min-width:40px;padding:7px 10px;font-size:12px}
+.pain{display:flex;gap:8px;align-items:center;font-size:12.5px;margin-top:10px;color:var(--mute);cursor:pointer}
+.pain input{width:18px;height:18px;margin:0}
+.readiness{display:flex;gap:14px;align-items:center}
+.rscore{width:70px;height:70px;flex-shrink:0;border-radius:50%;display:grid;place-content:center;text-align:center;border:3px solid var(--rc,var(--lime))}
+.rscore b{font-size:24px;line-height:1;color:var(--rc,var(--lime))}
+.rscore small{font-size:9.5px;color:var(--mute)}
+.rscore.media{--rc:var(--warn)}.rscore.baja{--rc:var(--live)}
+.insight{display:flex;gap:12px;align-items:flex-start}
+.insight .ik{width:34px;height:34px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;background:color-mix(in oklab,var(--ic) 18%,var(--s1));color:var(--ic)}
+.insight .ik svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.insight.ok{--ic:var(--lime)}.insight.warn{--ic:var(--warn)}.insight.info{--ic:var(--legs)}
+.insight p{margin:3px 0 0}
+.macros{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.macros div{background:var(--s2);border-radius:16px;padding:10px;text-align:center}
+.macros b{display:block;font-size:20px;font-variant-numeric:tabular-nums}
+.macros small{font-size:10.5px;color:var(--mute)}
+.art{margin-top:8px}
+.cues{margin:4px 0 0;padding-left:18px}
+.cues li{margin:3px 0;font-size:12.5px}
 .donetag{color:var(--lime);font-size:10.5px;font-weight:800}
 .dur{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--mute);font-weight:700}
 .dur svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.2}
@@ -217,8 +239,9 @@ nav svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:2;stro
 <div id="timer" role="timer" aria-live="polite"><span class="t" id="tleft">0:00</span><span class="bar2"><i id="tbar"></i></span><button onclick="addTime(30)" aria-label="Añadir 30 segundos al descanso">+30 s</button><button onclick="stopTimer()" aria-label="Saltar el descanso">Saltar</button></div>
 <nav id="nav" aria-label="Navegación"></nav>
 <script src="engine.js"></script>
+<script src="coach.js"></script>
 <script>
-const E = WT, KEY = 'wt.v1';
+const E = WT, C = COACH, KEY = 'wt.v1';
 let S = load(), tab = 'hoy', anim = true, tInt, tEnd = 0, tTotal = 1, charts = [], perfId = null;
 
 function load() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } }
@@ -236,14 +259,21 @@ const I = {
   progreso: '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>',
   perfil: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
   arrow: '<path d="M7 17L17 7M8 7h9v9"/>',
+  coach: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 21l1.9-5.4A8 8 0 1 1 21 12z"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01"/>',
+  check: '<path d="M5 12l5 5L20 7"/>',
+  alert: '<path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/>',
   flame: '<path d="M12 2c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-5 1-9z"/>',
   clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
 };
-const TABS = [['hoy', 'Inicio'], ['rutina', 'Rutina'], ['progreso', 'Progreso'], ['perfil', 'Perfil']];
+const TABS = [['hoy', 'Inicio'], ['rutina', 'Rutina'], ['coach', 'Coach'], ['progreso', 'Progreso'], ['perfil', 'Perfil']];
 const GOAL_TXT = { fuerza: 'Mover más kilos: 3–5 reps pesadas', hipertrofia: 'Ganar músculo: 6–15 reps cerca del fallo', resistencia: 'Aguantar más: 12–25 reps', definicion: 'Perder grasa sin perder músculo', general: 'Salud y constancia' };
 const DOW = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 const abbr = (name) => name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
 const sessionDates = () => S.sessions.map((s) => s.date);
+const segs = (name, arr, v, cls = '') => `<div class="seg ${cls}">${arr.map(([k, l]) => `<label><input type="radio" name="${name}" value="${k}" ${String(k) === String(v) ? 'checked' : ''}><span>${l}</span></label>`).join('')}</div>`;
+const todayReadiness = () => { const c = (S.checkins || {})[today()]; return c ? C.readiness(c) : null; };
+const curSession = () => C.adjustSession(E.nextSession(S, today()), todayReadiness());
 const GROUP = { 'Cuádriceps': 'legs', 'Glúteo': 'legs', 'Isquios': 'legs', 'Gemelos': 'legs', 'Cadena posterior': 'legs', 'Pecho': 'push', 'Hombro': 'push', 'Tríceps': 'push', 'Espalda': 'pull', 'Dorsal': 'pull', 'Bíceps': 'pull', 'Core': 'core' };
 const GNAME = { legs: 'Pierna', push: 'Empuje', pull: 'Tirón', core: 'Core' };
 const muscleGroup = (m) => GROUP[m.split('/')[0].split(' (')[0]] || 'core';
@@ -266,7 +296,7 @@ function render() {
   if (!S.profile) { $('nav').style.display = 'none'; $('app').innerHTML = `<div class="fade">${onboarding()}</div>`; return; }
   $('nav').style.display = 'flex';
   $('nav').innerHTML = TABS.map(([k, l]) => `<button class="${tab === k ? 'on' : ''}" onclick="go('${k}')" aria-label="${l}" aria-current="${tab === k}">${svg(I[k])}</button>`).join('');
-  $('app').innerHTML = `<div class="${anim ? 'fade' : ''}">${{ hoy, rutina, progreso, perfil }[tab]()}</div>`; anim = false;
+  $('app').innerHTML = `<div class="${anim ? 'fade' : ''}">${{ hoy, rutina, coach, progreso, perfil }[tab]()}</div>`; anim = false;
   drawCharts();
 }
 function go(k) { tab = k; anim = true; render(); scrollTo(0, 0); }
@@ -288,7 +318,7 @@ function drawCharts() {
       data: { labels: d.labels, datasets: [{ data: d.data, fill: true, tension: 0.4, borderWidth: 2.5, borderColor: '#d4f564', backgroundColor: g,
         pointBackgroundColor: '#d4f564', pointBorderColor: '#0b0d08', pointBorderWidth: 2, pointRadius: 4, pointHoverRadius: 6 }] },
       options: { maintainAspectRatio: false, animation: { duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 600 },
-        plugins: { legend: { display: false }, tooltip: { backgroundColor: '#d4f564', titleColor: '#0b0d08', bodyColor: '#0b0d08', displayColors: false, padding: 10, callbacks: { label: (c) => `${c.parsed.y} kg (máximo estimado)` } } },
+        plugins: { legend: { display: false }, tooltip: { backgroundColor: '#d4f564', titleColor: '#0b0d08', bodyColor: '#0b0d08', displayColors: false, padding: 10, callbacks: { label: (c) => `${c.parsed.y} ${d.unit || 'kg (máximo estimado)'}` } } },
         scales: { y: { grid: { color: 'rgba(255,255,255,.05)' }, border: { display: false }, ticks: { color: '#8d9480', padding: 8, precision: 0 } },
           x: { grid: { display: false }, border: { display: false }, ticks: { color: '#8d9480', maxRotation: 0, autoSkip: true } } } },
     }));
@@ -307,13 +337,15 @@ function onboarding() {
 }
 
 function profileForm(p, label) {
-  const seg = (name, arr, v) => `<div class="seg">${arr.map(([k, l]) => `<label><input type="radio" name="${name}" value="${k}" ${String(k) === String(v) ? 'checked' : ''}><span>${l}</span></label>`).join('')}</div>`;
   return `<div class="field" style="margin-top:0"><span class="lbl">Objetivo</span><div class="goal">${Object.entries(E.GOALS).map(([k, g]) =>
     `<label><input type="radio" name="goal" value="${k}" ${k === (p.goal || 'hipertrofia') ? 'checked' : ''}><div><b>${g.name}</b><small>${GOAL_TXT[k]}</small></div></label>`).join('')}</div></div>
-  <div class="field"><span class="lbl">Días por semana</span>${seg('days', [1, 2, 3, 4, 5, 6].map((d) => [d, d]), p.days || 3)}</div>
-  <div class="field"><span class="lbl">Minutos por sesión</span>${seg('min', [30, 45, 60, 75, 90, 120].map((m) => [m, m]), p.minutes || 60)}</div>
-  <div class="field"><span class="lbl">Experiencia</span>${seg('level', [['principiante', 'Novato'], ['intermedio', 'Intermedio'], ['avanzado', 'Avanzado']], p.level || 'principiante')}<p class="mute" style="margin:8px 0 0">Novato: menos de 1 año entrenando con pesas. Intermedio: 1 a 3 años. Avanzado: más de 3.</p></div>
-  <div class="field"><span class="lbl">Sexo</span>${seg('sex', [['m', 'Hombre'], ['f', 'Mujer']], p.sex || 'm')}</div>
+  <div class="field"><span class="lbl">Días por semana</span>${segs('days', [1, 2, 3, 4, 5, 6].map((d) => [d, d]), p.days || 3)}</div>
+  <div class="field"><span class="lbl">Minutos por sesión</span>${segs('min', [30, 45, 60, 75, 90, 120].map((m) => [m, m]), p.minutes || 60)}</div>
+  <div class="field"><span class="lbl">Experiencia</span>${segs('level', [['principiante', 'Novato'], ['intermedio', 'Intermedio'], ['avanzado', 'Avanzado']], p.level || 'principiante')}<p class="mute" style="margin:8px 0 0">Novato: menos de 1 año entrenando con pesas. Intermedio: 1 a 3 años. Avanzado: más de 3.</p></div>
+  <div class="field"><span class="lbl">Sexo</span>${segs('sex', [['m', 'Hombre'], ['f', 'Mujer']], p.sex || 'm')}</div>
+  <div class="field"><div style="display:flex;gap:12px;flex-wrap:wrap"><div><label class="lbl" for="f-age">Edad</label><input id="f-age" type="number" inputmode="numeric" min="14" max="90" value="${p.age || ''}" style="width:100px"></div>
+    <div><label class="lbl" for="f-h">Altura (cm)</label><input id="f-h" type="number" inputmode="numeric" min="120" max="230" value="${p.height || ''}" style="width:110px"></div></div>
+    <p class="mute" style="margin:8px 0 0">Opcional. Con edad y altura, Coach calcula tus calorías y macros.</p><p id="ah-err" role="alert" style="margin:6px 0 0;color:var(--live);font-size:12px;font-weight:700"></p></div>
   <div class="field"><label class="lbl" for="f-bw">Peso corporal (kg)</label><input id="f-bw" type="number" inputmode="decimal" min="30" max="250" value="${p.bw || 70}" style="width:120px" aria-describedby="bw-help bw-err">
   <p class="mute" id="bw-help" style="margin:8px 0 0">Con tu sexo, peso y experiencia calculamos los pesos de tu primera sesión. Después se ajustan a lo que anotes.</p>
   <p id="bw-err" role="alert" style="margin:6px 0 0;color:var(--live);font-size:12px;font-weight:700"></p></div>
@@ -324,8 +356,10 @@ function saveProfile() {
   const val = (n) => document.querySelector(`input[name="${n}"]:checked`).value;
   const bw = +$('f-bw').value;
   if (!(bw >= 30 && bw <= 250)) { $('bw-err').textContent = 'Escribe tu peso corporal en kg, entre 30 y 250.'; $('f-bw').focus(); return; }
+  const age = +$('f-age').value || null, height = +$('f-h').value || null;
+  if ((age && !(age >= 14 && age <= 90)) || (height && !(height >= 120 && height <= 230))) { $('ah-err').textContent = 'Revisa edad (14 a 90) y altura en cm (120 a 230), o déjalas vacías.'; return; }
   const old = S.profile, goal = val('goal');
-  S.profile = { goal, days: +val('days'), minutes: +val('min'), level: val('level'), sex: val('sex'), bw,
+  S.profile = { goal, days: +val('days'), minutes: +val('min'), level: val('level'), sex: val('sex'), bw, age, height,
     start: old && old.goal === goal ? old.start : today() }; // nuevo objetivo = nuevo mesociclo
   S.plan = E.buildPlan(S.profile); S.next = 0; S.lifts = S.lifts || {}; S.sessions = S.sessions || []; delete S.active;
   save(); go('hoy');
@@ -364,7 +398,7 @@ function resetAll() {
 
 /* ---------- Inicio / entrenar ---------- */
 function hoy() {
-  const p = S.profile, ses = E.nextSession(S, today()), g = E.GOALS[p.goal];
+  const p = S.profile, ses = curSession(), g = E.GOALS[p.goal], rd = todayReadiness();
   const st = E.streaks(sessionDates(), p.days, today());
   const t = E.dnum(today()), mon = t - ((t + 3) % 7), dates = new Set(sessionDates());
   const thisWeek = [...dates].filter((d) => { const n = E.dnum(d); return n >= mon && n <= mon + 6; }).length;
@@ -387,6 +421,8 @@ function hoy() {
       <div class="val"><b>${thisWeek} : ${p.days}</b><small>sesiones hechas / objetivo</small></div>
       <div><div class="ball">${svg(I.progreso)}</div><small class="cap">Mejor ${st.best}</small></div></div></div>
   ${S.sessions.some((s) => s.date === today()) ? '<div class="alert ok"><b>Hoy ya entrenaste.</b> Racha a salvo: descansar también es progresar.</div>' : ''}
+  ${!rd && !S.sessions.some((s) => s.date === today()) ? `<div class="card insight info" style="margin-top:12px"><span class="ik">${svg(I.coach)}</span><div><b>¿Cómo llegas hoy?</b><p class="mute">Haz el check-in de 20 segundos y ajusto la sesión a tu recuperación.</p><button class="btn ghost" style="margin-top:10px" onclick="go('coach')">Hacer check-in</button></div></div>` : ''}
+  ${rd && rd.level !== 'alta' && !ses.deload ? `<div class="alert warn"><b>Preparación ${rd.level} (${rd.score}/100).</b> ${rd.msg} La sesión de abajo ya está ajustada.</div>` : ''}
   ${ses.deload ? '<div class="alert warn"><b>Semana de descarga.</b> Mitad de series y −10% de carga para recuperarte y volver más fuerte.</div>' : ''}
   ${sec(esc(ses.name), `<span class="mute">Anota las reps de cada serie</span>`)}
   ${ses.exercises.map((e, i) => exCard(e, i, A)).join('')}
@@ -411,11 +447,14 @@ function exCard(e, i, A) {
       <div class="right"><div class="team">Reps</div><div class="big">${e.lo}–${e.hi}</div></div></div>
     <div class="sets">${Array.from({ length: e.sets }, (_, j) => { const v = reps[j] ?? '';
       return `<div class="set"><input type="number" inputmode="numeric" min="0" max="100" placeholder="–" value="${v}" class="${cls(v, e)}" aria-label="Reps serie ${j + 1}, objetivo ${e.lo} a ${e.hi}" onchange="setRep(this,${i},${j},${e.rest},${e.lo})"><span>${j + 1}</span></div>`; }).join('')}</div>
-    ${wu.length || e.eq === 'bb' || alts.length ? `<details><summary>Calentamiento, discos y alternativas<span class="mini">${svg(I.arrow)}</span></summary><div class="tools">
+    <div class="effort"><span class="lbl" id="rir-l${i}">Reps que te sobraban en la última serie</span>${segs('rir' + i, [[0, '0'], [1, '1'], [2, '2'], [3, '3'], [4, '4+']], (A.rir || {})[i], 'sm').replace('<div class="seg sm">', `<div class="seg sm" role="radiogroup" aria-labelledby="rir-l${i}" onchange="setRir(${i},event.target.value)">`)}
+      <label class="pain"><input type="checkbox" ${(A.pain || {})[i] ? 'checked' : ''} onchange="setPain(${i},this.checked)">Sentí molestia o dolor en este ejercicio</label></div>
+    <details><summary>Técnica, calentamiento y alternativas<span class="mini">${svg(I.arrow)}</span></summary><div class="tools">
+      ${C.CUES[e.id] ? `<div><b>Técnica:</b><ul class="cues">${C.CUES[e.id][0].map((c) => `<li>${c}</li>`).join('')}</ul><b>Error común:</b> ${C.CUES[e.id][1]}.</div>` : ''}
       ${wu.length ? `<div><b>Aproximación:</b> ${wu.map(([k, r]) => `${k} kg × ${r}`).join(' · ')}</div>` : ''}
       ${e.eq === 'bb' ? plateViz(w) : ''}
       ${alts.length ? `<div><b>¿Máquina ocupada o molestia?</b><br><select onchange="swap(${i},this.value)" aria-label="Cambiar ejercicio" style="margin-top:6px;width:100%"><option value="">Cambiar por…</option>${alts.map((k) => `<option value="${k}">${E.EX[k][0]}</option>`).join('')}</select></div>` : ''}
-    </div></details>` : ''}</div>`;
+    </div></details></div>`;
 }
 const cls = (v, e) => (v === '' ? '' : v < e.lo ? 'low' : 'done');
 
@@ -426,6 +465,8 @@ function setRep(el, i, j, rest, lo) {
   save();
   if (v !== '') startTimer(rest);
 }
+function setRir(i, v) { (S.active.rir = S.active.rir || {})[i] = +v; save(); }
+function setPain(i, on) { (S.active.pain = S.active.pain || {})[i] = on; save(); }
 function setW(i, v) { S.active.w[i] = Math.max(0, Math.min(500, +v || 0)); save(); render(); }
 function swap(i, id) {
   if (!id) return;
@@ -435,13 +476,13 @@ function swap(i, id) {
 }
 
 function finish() {
-  const ses = E.nextSession(S, today()), A = S.active;
+  const ses = curSession(), A = S.active;
   const missing = ses.exercises.filter((e, i) => !(A.reps[i] || []).some((v) => v !== '' && v != null)).length;
   if (missing === ses.exercises.length) return alert('Anota las reps de al menos una serie para terminar la sesión.');
   if (missing && !confirm(missing === 1 ? '1 ejercicio no tiene series anotadas y no contará para tu progreso. ¿Terminar la sesión igual?' : `${missing} ejercicios no tienen series anotadas y no contarán para tu progreso. ¿Terminar la sesión igual?`)) return;
   ses.exercises.forEach((e, i) => { if (A.w[i] != null) e.w = A.w[i]; });
   const vol = ses.exercises.reduce((s, e, i) => s + (A.reps[i] || []).reduce((a, r) => a + (+r || 0), 0) * e.w, 0);
-  const res = E.applySession(S, ses, A.reps, today());
+  const res = E.applySession(S, ses, A.reps, today(), { rir: A.rir, pain: A.pain });
   delete S.active; save(); stopTimer();
   const st = E.streaks(sessionDates(), S.profile.days, today()), prs = res.filter((r) => r.pr).length;
   const icon = { up: '▲', hold: '=', down: '▼' };
@@ -454,6 +495,55 @@ function finish() {
     <div class="card">${res.map((r) => `<div class="res ${r.kind}"><span class="ic">${icon[r.kind]}</span><div><div style="font-weight:700">${r.name}${r.pr ? `<span class="prb">Nuevo récord</span>` : ''}</div><div class="mute">${r.msg}</div></div></div>`).join('')}</div>
     <button class="btn" onclick="render()">Listo</button></div>`;
   scrollTo(0, 0);
+}
+
+/* ---------- Coach ---------- */
+function checkinForm() {
+  const scale = [1, 2, 3, 4, 5].map((n) => [n, n]);
+  return `<div class="field" style="margin-top:0"><span class="lbl">Horas de sueño anoche</span>${segs('ck-sleep', [[5, '5 o menos'], [6, '6'], [7, '7'], [8, '8'], [9, '9+']], 7)}</div>
+    <div class="field"><span class="lbl">Energía</span>${segs('ck-energy', scale, 3)}<p class="mute" style="margin:6px 0 0">1 = sin energía · 5 = a tope</p></div>
+    <div class="field"><span class="lbl">Agujetas o cansancio muscular</span>${segs('ck-sore', scale, 2)}<p class="mute" style="margin:6px 0 0">1 = nada · 5 = mucho</p></div>
+    <div class="field"><span class="lbl">Estrés</span>${segs('ck-stress', scale, 2)}<p class="mute" style="margin:6px 0 0">1 = nada · 5 = mucho</p></div>
+    <button class="btn" onclick="saveCheckin()">Guardar check-in</button>`;
+}
+function saveCheckin() {
+  const v = (n) => +document.querySelector(`input[name="${n}"]:checked`).value;
+  (S.checkins = S.checkins || {})[today()] = { sleep: v('ck-sleep'), energy: v('ck-energy'), soreness: v('ck-sore'), stress: v('ck-stress') };
+  save(); render();
+}
+function redoCheckin() { delete S.checkins[today()]; save(); render(); }
+function logBW() {
+  const kg = Math.round(+$('bw-in').value * 10) / 10;
+  if (!(kg >= 30 && kg <= 250)) { $('bw-msg').textContent = 'Escribe tu peso en kg, entre 30 y 250.'; return; }
+  S.bwlog = (S.bwlog || []).filter((x) => x.d !== today()).concat({ d: today(), kg }).sort((a, b) => (a.d < b.d ? -1 : 1)).slice(-120);
+  S.profile.bw = kg; save(); render();
+}
+function nutritionCard(n, p) {
+  const [lo, hi] = n.rate, f = (x) => (x > 0 ? '+' : '') + String(x).replace('.', ',');
+  return `<div style="display:flex;justify-content:space-between;align-items:baseline"><div><div class="team">Calorías al día</div><div class="big">${n.kcal.toLocaleString('es')}<small>kcal</small></div></div><div class="right"><div class="team">Agua</div><div class="big">${String(n.water).replace('.', ',')}<small>L</small></div></div></div>
+    <div class="macros"><div><b>${n.protein} g</b><small>proteína</small></div><div><b>${n.carbs} g</b><small>carbohidratos</small></div><div><b>${n.fat} g</b><small>grasa</small></div></div>
+    <p class="mute" style="margin:12px 0 0">Gasto estimado: ${n.tdee.toLocaleString('es')} kcal/día (fórmula de Mifflin-St Jeor y tus días de entrenamiento). Proteína: ${String(n.protKg).replace('.', ',')} g por kg de peso. Ritmo de peso recomendado: entre ${f(lo)} % y ${f(hi)} % por semana; si te sales, Coach te dirá cuánto ajustar.</p>`;
+}
+function coach() {
+  const p = S.profile, td = today(), ck = (S.checkins || {})[td], rd = ck && C.readiness(ck);
+  const ins = C.insights(S, td), n = C.nutrition(p), tr = C.bwTrend(S.bwlog || [], td), bw = S.bwlog || [];
+  const ic = { ok: I.check, warn: I.alert, info: I.info };
+  const bwData = { labels: bw.slice(-30).map((x) => x.d.slice(8) + '/' + x.d.slice(5, 7)), data: bw.slice(-30).map((x) => x.kg), unit: 'kg' };
+  return `${header('Coach')}
+  ${sec('Check-in de hoy', ck ? '<button onclick="redoCheckin()">Rehacer</button>' : '<span class="mute">20 segundos</span>')}
+  <div class="card">${ck ? `<div class="readiness"><div class="rscore ${rd.level}"><b>${rd.score}</b><small>de 100</small></div><div><b>Preparación ${rd.level}</b><p class="mute" style="margin:3px 0 0">${rd.msg}</p></div></div>` : checkinForm()}</div>
+  ${sec('Lo que veo en tus datos')}
+  ${ins.length ? ins.map((x) => `<div class="card insight ${x.kind}"><span class="ik">${svg(ic[x.kind])}</span><div><b>${x.title}</b><p class="mute">${x.text}</p></div></div>`).join('')
+    : '<div class="card"><p class="mute" style="margin:0">Todavía no hay datos suficientes. Entrena un par de semanas, haz el check-in y registra tu peso: aquí aparecerán consejos sobre constancia, estancamientos, sueño y peso.</p></div>'}
+  ${sec('Nutrición', `<span class="mute">${E.GOALS[p.goal].name}</span>`)}
+  <div class="card mcard">${n ? nutritionCard(n, p) : `<p class="mute" style="margin:0">Añade tu edad y altura en Perfil para calcular tus calorías y macros.</p><button class="btn ghost" onclick="go('perfil')">Ir a Perfil</button>`}</div>
+  ${sec('Peso corporal', tr ? `<span class="mute">media de 7 días: ${String(tr.avg).replace('.', ',')} kg</span>` : '')}
+  <div class="card"><label class="lbl" for="bw-in">Peso de hoy (kg)</label><div style="display:flex;gap:8px;align-items:center"><input id="bw-in" type="number" inputmode="decimal" step="0.1" min="30" max="250" value="${p.bw}" style="width:110px"><button class="btn" style="margin:0;width:auto;padding:12px 20px" onclick="logBW()">Registrar</button></div>
+    <p id="bw-msg" role="alert" style="margin:6px 0 0;color:var(--live);font-size:12px;font-weight:700"></p>
+    ${bw.length >= 2 ? `<div class="chart"><canvas data-chart='${JSON.stringify(bwData)}' role="img" aria-label="Evolución de tu peso corporal"></canvas></div>` : '<p class="mute" style="margin:0">Pésate 3 o 4 veces por semana, en ayunas y tras ir al baño. Lo que cuenta es la media semanal, no el dato de un día.</p>'}</div>
+  ${sec('Aprende', '<span class="mute">basado en evidencia</span>')}
+  <div class="card">${C.ARTICLES.map((a) => `<details class="art"><summary>${a.t}<span class="mini">${svg(I.arrow)}</span></summary><div class="tools"><p style="margin:0">${a.b}</p><p class="mute" style="margin:0">Fuente: ${a.ref}</p></div></details>`).join('')}</div>
+  <p class="mute">Forja te orienta con evidencia científica, pero no sustituye a un médico, nutricionista o fisioterapeuta. Ante una lesión, enfermedad o dolor que no se va, consulta a un profesional.</p>`;
 }
 
 /* ---------- Rutina ---------- */
