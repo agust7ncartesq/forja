@@ -214,7 +214,7 @@ nav svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:2;stro
 </head>
 <body>
 <main id="app"></main>
-<div id="timer" role="timer" aria-live="polite"><span class="t" id="tleft">0:00</span><span class="bar2"><i id="tbar"></i></span><button onclick="addTime(30)">+30s</button><button onclick="stopTimer()">Saltar</button></div>
+<div id="timer" role="timer" aria-live="polite"><span class="t" id="tleft">0:00</span><span class="bar2"><i id="tbar"></i></span><button onclick="addTime(30)" aria-label="Añadir 30 segundos al descanso">+30 s</button><button onclick="stopTimer()" aria-label="Saltar el descanso">Saltar</button></div>
 <nav id="nav" aria-label="Navegación"></nav>
 <script src="engine.js"></script>
 <script>
@@ -222,7 +222,8 @@ const E = WT, KEY = 'wt.v1';
 let S = load(), tab = 'hoy', anim = true, tInt, tEnd = 0, tTotal = 1, charts = [], perfId = null;
 
 function load() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } }
-function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { alert('No se pudo guardar: el navegador bloquea el almacenamiento.'); } }
+let saveWarned = false;
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { if (!saveWarned) { saveWarned = true; alert('Tus cambios no se están guardando: el navegador bloquea el almacenamiento de este sitio. Sal del modo privado o permite el almacenamiento y vuelve a abrir Forja.'); } } }
 const today = () => new Date().toLocaleDateString('sv'); // YYYY-MM-DD local
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -271,7 +272,7 @@ function render() {
 function go(k) { tab = k; anim = true; render(); scrollTo(0, 0); }
 const header = (title) => `<div class="head"><button class="round me" onclick="go('perfil')" aria-label="Perfil">${svg(I.perfil)}</button>
   ${title ? `<h1 style="font-size:18px;text-transform:uppercase;letter-spacing:.04em">${title}</h1>` : '<div class="logo">FORJA<i>+</i></div>'}
-  <button class="round" onclick="go('${tab === 'progreso' ? 'hoy' : 'progreso'}')" aria-label="${tab === 'progreso' ? 'Inicio' : 'Récords'}">${svg(tab === 'progreso' ? I.hoy : I.progreso)}</button></div>`;
+  <button class="round" onclick="go('${tab === 'progreso' ? 'hoy' : 'progreso'}')" aria-label="${tab === 'progreso' ? 'Ir a Inicio' : 'Ir a Progreso'}">${svg(tab === 'progreso' ? I.hoy : I.progreso)}</button></div>`;
 const sec = (t, link = '') => `<div class="sec"><h2>${t}</h2>${link}</div>`;
 
 /* ---------- Gráficas ---------- */
@@ -287,7 +288,7 @@ function drawCharts() {
       data: { labels: d.labels, datasets: [{ data: d.data, fill: true, tension: 0.4, borderWidth: 2.5, borderColor: '#d4f564', backgroundColor: g,
         pointBackgroundColor: '#d4f564', pointBorderColor: '#0b0d08', pointBorderWidth: 2, pointRadius: 4, pointHoverRadius: 6 }] },
       options: { maintainAspectRatio: false, animation: { duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 600 },
-        plugins: { legend: { display: false }, tooltip: { backgroundColor: '#d4f564', titleColor: '#0b0d08', bodyColor: '#0b0d08', displayColors: false, padding: 10, callbacks: { label: (c) => `${c.parsed.y} kg 1RM` } } },
+        plugins: { legend: { display: false }, tooltip: { backgroundColor: '#d4f564', titleColor: '#0b0d08', bodyColor: '#0b0d08', displayColors: false, padding: 10, callbacks: { label: (c) => `${c.parsed.y} kg (máximo estimado)` } } },
         scales: { y: { grid: { color: 'rgba(255,255,255,.05)' }, border: { display: false }, ticks: { color: '#8d9480', padding: 8, precision: 0 } },
           x: { grid: { display: false }, border: { display: false }, ticks: { color: '#8d9480', maxRotation: 0, autoSkip: true } } } },
     }));
@@ -311,16 +312,18 @@ function profileForm(p, label) {
     `<label><input type="radio" name="goal" value="${k}" ${k === (p.goal || 'hipertrofia') ? 'checked' : ''}><div><b>${g.name}</b><small>${GOAL_TXT[k]}</small></div></label>`).join('')}</div></div>
   <div class="field"><span class="lbl">Días por semana</span>${seg('days', [1, 2, 3, 4, 5, 6].map((d) => [d, d]), p.days || 3)}</div>
   <div class="field"><span class="lbl">Minutos por sesión</span>${seg('min', [30, 45, 60, 75, 90, 120].map((m) => [m, m]), p.minutes || 60)}</div>
-  <div class="field"><span class="lbl">Experiencia</span>${seg('level', [['principiante', 'Novato'], ['intermedio', 'Intermedio'], ['avanzado', 'Avanzado']], p.level || 'principiante')}</div>
+  <div class="field"><span class="lbl">Experiencia</span>${seg('level', [['principiante', 'Novato'], ['intermedio', 'Intermedio'], ['avanzado', 'Avanzado']], p.level || 'principiante')}<p class="mute" style="margin:8px 0 0">Novato: menos de 1 año entrenando con pesas. Intermedio: 1 a 3 años. Avanzado: más de 3.</p></div>
   <div class="field"><span class="lbl">Sexo</span>${seg('sex', [['m', 'Hombre'], ['f', 'Mujer']], p.sex || 'm')}</div>
-  <div class="field"><span class="lbl">Peso corporal (kg)</span><input id="f-bw" type="number" inputmode="decimal" min="30" max="250" value="${p.bw || 70}" style="width:120px"></div>
+  <div class="field"><label class="lbl" for="f-bw">Peso corporal (kg)</label><input id="f-bw" type="number" inputmode="decimal" min="30" max="250" value="${p.bw || 70}" style="width:120px" aria-describedby="bw-help bw-err">
+  <p class="mute" id="bw-help" style="margin:8px 0 0">Con tu sexo, peso y experiencia calculamos los pesos de tu primera sesión. Después se ajustan a lo que anotes.</p>
+  <p id="bw-err" role="alert" style="margin:6px 0 0;color:var(--live);font-size:12px;font-weight:700"></p></div>
   <button class="btn" onclick="saveProfile()">${label}</button>`;
 }
 
 function saveProfile() {
   const val = (n) => document.querySelector(`input[name="${n}"]:checked`).value;
   const bw = +$('f-bw').value;
-  if (!(bw >= 30 && bw <= 250)) return alert('Indica un peso corporal entre 30 y 250 kg.');
+  if (!(bw >= 30 && bw <= 250)) { $('bw-err').textContent = 'Escribe tu peso corporal en kg, entre 30 y 250.'; $('f-bw').focus(); return; }
   const old = S.profile, goal = val('goal');
   S.profile = { goal, days: +val('days'), minutes: +val('min'), level: val('level'), sex: val('sex'), bw,
     start: old && old.goal === goal ? old.start : today() }; // nuevo objetivo = nuevo mesociclo
@@ -329,12 +332,12 @@ function saveProfile() {
 }
 
 function perfil() {
-  return `${header('Perfil')}<p class="mute" style="margin:0 0 12px">Al guardar se regenera la rutina. Tus pesos e historial se conservan.</p>
-  <div class="card">${profileForm(S.profile, 'Guardar y regenerar')}</div>
-  ${sec('Tus datos')}<div class="card"><p class="mute" style="margin:0">Los datos viven solo en este dispositivo. Exporta una copia para no perderlos o pasarlos a otro móvil.</p>
+  return `${header('Perfil')}<p class="mute" style="margin:0 0 12px">Al guardar rehacemos tu rutina con estos datos y empiezas por el día 1. Tus pesos, historial y rachas se conservan. Los ejercicios que cambiaste a mano vuelven a los de la rutina.</p>
+  <div class="card">${profileForm(S.profile, 'Guardar y rehacer rutina')}</div>
+  ${sec('Tus datos')}<div class="card"><p class="mute" style="margin:0">Tus datos se guardan solo en este navegador. Si lo borras o cambias de móvil, los pierdes. Exporta una copia y guárdala donde quieras; para recuperarla, usa Importar copia.</p>
     <button class="btn" onclick="exportData()">Exportar copia (.json)</button>
     <label class="btn ghost">Importar copia<input type="file" accept="application/json,.json" hidden onchange="importData(this.files[0])"></label>
-    <button class="btn danger" onclick="resetAll()">Borrar todo</button></div>`;
+    <button class="btn danger" onclick="resetAll()">Borrar todos mis datos</button></div>`;
 }
 
 function exportData() {
@@ -349,12 +352,12 @@ function importData(file) {
     if (!d.profile || !E.GOALS[d.profile.goal] || !Array.isArray(d.plan) || !Array.isArray(d.sessions)) throw new Error('formato');
     d.plan.forEach((day) => day.exercises.forEach((e) => { if (!E.EX[e.id]) throw new Error('ejercicio desconocido'); }));
     d.lifts = Object.fromEntries(Object.entries(d.lifts || {}).filter(([k]) => E.EX[k]));
-    if (!confirm('Esto reemplaza tus datos actuales por la copia. ¿Continuar?')) return;
+    if (!confirm('¿Reemplazar tus datos por los de la copia? Perderás lo que tengas ahora en este navegador.')) return;
     S = d; delete S.active; save(); go('hoy');
-  }).catch(() => alert('El archivo no es una copia válida de Forja.'));
+  }).catch(() => alert('No pudimos leer ese archivo como una copia de Forja. Elige el archivo .json que descargaste con Exportar copia.'));
 }
 function resetAll() {
-  if (!confirm('Se borrarán perfil, pesos, historial y rachas. No se puede deshacer. ¿Continuar?')) return;
+  if (!confirm('¿Borrar todos tus datos? Se eliminan tu perfil, pesos, historial y rachas de este navegador y no se pueden recuperar, salvo que tengas una copia exportada.')) return;
   try { localStorage.removeItem(KEY); } catch {}
   S = {}; stopTimer(); render();
 }
@@ -400,7 +403,7 @@ function plateViz(w) {
 
 function exCard(e, i, A) {
   const w = A.w[i] ?? e.w, reps = A.reps[i] || [], wu = E.warmup(e.id, w), alts = E.alternatives(e.id);
-  const unit = e.eq === 'db' ? 'kg/mano' : e.eq === 'bw' ? 'lastre' : 'kg';
+  const unit = e.eq === 'db' ? 'kg/mano' : e.eq === 'bw' ? 'kg extra' : 'kg';
   const done = reps.filter((v) => v !== '' && v != null).length;
   return `<div class="card mcard"><h3>${E.EX[e.id][0]}<small>${done >= e.sets ? '<span class="donetag">Completado</span>' : done ? `<span class="livedot">Serie ${done + 1}/${e.sets}</span>` : mtag(e.id)}</small></h3>
     <div class="row"><div><div class="team">Peso</div><div class="wbox"><input type="number" inputmode="decimal" step="0.5" min="0" value="${w}" aria-label="Peso de ${E.EX[e.id][0]} en ${unit}" style="width:${String(w).length + 0.3}ch" oninput="this.style.width=(this.value.length+.3)+'ch'" onchange="setW(${i},this.value)"><small class="mute">${unit}</small></div></div>
@@ -434,8 +437,8 @@ function swap(i, id) {
 function finish() {
   const ses = E.nextSession(S, today()), A = S.active;
   const missing = ses.exercises.filter((e, i) => !(A.reps[i] || []).some((v) => v !== '' && v != null)).length;
-  if (missing === ses.exercises.length) return alert('Registra al menos una serie.');
-  if (missing && !confirm(`${missing} ejercicio(s) sin registrar no contarán. ¿Terminar igual?`)) return;
+  if (missing === ses.exercises.length) return alert('Anota las reps de al menos una serie para terminar la sesión.');
+  if (missing && !confirm(missing === 1 ? '1 ejercicio no tiene series anotadas y no contará para tu progreso. ¿Terminar la sesión igual?' : `${missing} ejercicios no tienen series anotadas y no contarán para tu progreso. ¿Terminar la sesión igual?`)) return;
   ses.exercises.forEach((e, i) => { if (A.w[i] != null) e.w = A.w[i]; });
   const vol = ses.exercises.reduce((s, e, i) => s + (A.reps[i] || []).reduce((a, r) => a + (+r || 0), 0) * e.w, 0);
   const res = E.applySession(S, ses, A.reps, today());
@@ -443,12 +446,12 @@ function finish() {
   const st = E.streaks(sessionDates(), S.profile.days, today()), prs = res.filter((r) => r.pr).length;
   const icon = { up: '▲', hold: '=', down: '▼' };
   $('app').innerHTML = `<div class="fade">${header('Sesión completada')}
-    <div class="limecard" style="margin-top:0"><div class="top"><span>${esc(ses.name)}</span><span class="pilldark">Final</span></div>
+    <div class="limecard" style="margin-top:0"><div class="top"><span>${esc(ses.name)}</span><span class="pilldark">Guardada</span></div>
       <div class="score"><div><div class="ball">${svg(I.flame)}</div><small class="cap">Racha ${st.cur}</small></div>
         <div class="val"><b>${Math.round(vol).toLocaleString('es')}</b><small>kg de volumen total</small></div>
-        <div><div class="ball">${svg(I.progreso)}</div><small class="cap">${prs} PR</small></div></div></div>
+        <div><div class="ball">${svg(I.progreso)}</div><small class="cap">${prs === 1 ? "1 récord" : prs + " récords"}</small></div></div></div>
     ${sec('Ajustes para la próxima')}
-    <div class="card">${res.map((r) => `<div class="res ${r.kind}"><span class="ic">${icon[r.kind]}</span><div><div style="font-weight:700">${r.name}${r.pr ? `<span class="prb">PR ${r.e1rm} kg</span>` : ''}</div><div class="mute">${r.msg}</div></div></div>`).join('')}</div>
+    <div class="card">${res.map((r) => `<div class="res ${r.kind}"><span class="ic">${icon[r.kind]}</span><div><div style="font-weight:700">${r.name}${r.pr ? `<span class="prb">Nuevo récord</span>` : ''}</div><div class="mute">${r.msg}</div></div></div>`).join('')}</div>
     <button class="btn" onclick="render()">Listo</button></div>`;
   scrollTo(0, 0);
 }
@@ -478,20 +481,20 @@ function progreso() {
   const top = `${header('Progreso')}<div class="stats"><div class="stat"><b>${S.sessions.length}</b><small>sesiones</small></div><div class="stat"><b>${st.weeks}</b><small>semanas cumplidas</small></div><div class="stat"><b>${st.best}</b><small>mejor racha</small></div></div>
     ${sec('Mapa de racha', '<span class="mute">12 semanas</span>')}<div class="card"><div class="heat" aria-label="Constancia últimas 12 semanas">${cells}</div>
     <p class="mute" style="margin:10px 0 0">La racha sigue si no pasas más de ${st.gap} días sin entrenar.</p></div>`;
-  if (!rows.length) return top + `<div class="card"><p class="mute" style="margin:0">Termina tu primera sesión para ver tus pesos, récords y la curva de cada ejercicio.</p></div>`;
+  if (!rows.length) return top + `<div class="card"><p class="mute" style="margin:0">Aquí verás tus pesos, récords y la evolución de cada ejercicio cuando termines tu primera sesión.</p><button class="btn" onclick="go('hoy')">Ir a entrenar</button></div>`;
   if (!perfId || !S.lifts[perfId]) perfId = rows[0][0];
   const L = S.lifts[perfId].log;
   const data = { labels: L.map((x) => x.d.slice(8) + '/' + x.d.slice(5, 7)), data: L.map((x) => Math.round(x.w * (1 + Math.max(...x.r) / 30))) };
-  return `${top}${sec('Rendimiento', '<span class="mute">1RM estimado</span>')}
+  return `${top}${sec('Rendimiento', '<span class="mute">máximo estimado</span>')}
   <div class="chips">${rows.map(([k]) => `<button class="chip ${k === perfId ? 'on' : ''}" style="${gv(grp(k))}" onclick="perfId='${k}';render()"><i>${esc(abbr(E.EX[k][0]))}</i>${E.EX[k][0]}</button>`).join('')}</div>
-  <div class="card" style="margin-top:10px"><div style="display:flex;justify-content:space-between;align-items:baseline"><b>${E.EX[perfId][0]}</b><span class="mute">próximo: <b style="color:var(--lime)">${S.lifts[perfId].w} kg</b></span></div>
-    <div class="chart"><canvas data-chart='${JSON.stringify(data)}' role="img" aria-label="Evolución del 1RM estimado de ${E.EX[perfId][0]}"></canvas></div></div>
+  <div class="card" style="margin-top:10px"><div style="display:flex;justify-content:space-between;align-items:baseline"><b>${E.EX[perfId][0]}</b><span class="mute">próxima sesión: <b style="color:var(--lime)">${S.lifts[perfId].w} kg</b></span></div>
+    <div class="chart"><canvas data-chart='${JSON.stringify(data)}' role="img" aria-label="Evolución del peso máximo estimado en ${E.EX[perfId][0]}"></canvas></div></div>
   ${sec('Registro de cargas')}
   ${rows.map(([id, l]) => { const x = l.log[l.log.length - 1];
-    return `<div class="card mcard"><div class="row"><div><div class="team">${E.EX[id][0]}</div><div class="big">${l.w}<small>kg</small></div></div>
-      <div class="center"><b>${x.w} × ${x.r.join('/')}</b>${x.d.slice(8)}/${x.d.slice(5, 7)}</div>
-      <div class="right"><div class="team">1RM est.</div><div class="big">${l.e1rm ? Math.round(l.e1rm) : '—'}<small>kg</small></div></div></div></div>`; }).join('')}
-  <p class="mute">1RM estimado con la fórmula de Epley a partir de tu mejor serie de cada sesión.</p>`;
+    return `<div class="card mcard"><h3>${E.EX[id][0]}<small>${mtag(id)}</small></h3><div class="row"><div><div class="team">Próxima</div><div class="big">${l.w}<small>kg</small></div></div>
+      <div class="center">Última, ${x.d.slice(8)}/${x.d.slice(5, 7)}<b>${x.w} kg × ${x.r.join(' / ')}</b></div>
+      <div class="right"><div class="team">Máximo est.</div><div class="big">${l.e1rm ? Math.round(l.e1rm) : '—'}<small>kg</small></div></div></div></div>`; }).join('')}
+  <p class="mute">Máximo estimado: el peso que podrías levantar una sola vez (1RM), calculado con la fórmula de Epley a partir de tu mejor serie de cada sesión.</p>`;
 }
 
 /* ---------- Temporizador de descanso ---------- */

@@ -151,23 +151,30 @@ const WT = (() => {
   }
 
   // Progresión doble con descarga reactiva.
+  // Texto de carga según equipo: lastre en peso corporal, por mano en mancuernas.
+  function load(id, w) {
+    const eq = EX[id][3];
+    if (eq === 'bw') return w ? `peso corporal + ${w} kg` : 'peso corporal';
+    return eq === 'db' ? `${w} kg por mano` : `${w} kg`;
+  }
+
   function progress(ex, w, lift, reps, p, deload) {
     const e1rm = Math.max(lift.e1rm || 0, w ? Math.max(...reps.map((r) => e1rmOf(w, r))) : 0);
-    if (deload) return { e1rm, fails: lift.fails || 0, w: lift.w ?? w, kind: 'hold', msg: 'Semana de descarga: recupera, sin subir peso.' };
+    if (deload) return { e1rm, fails: lift.fails || 0, w: lift.w ?? w, kind: 'hold', msg: 'Semana de descarga: el peso no sube esta semana para que recuperes.' };
     const thr = p.level === 'principiante' ? Math.ceil((ex.lo + ex.hi) / 2) : ex.hi;
     if (reps.length >= ex.sets && reps.every((r) => r >= thr)) {
       const nw = roundW(ex.id, w + inc(ex.id, p));
-      return { e1rm, fails: 0, w: nw, kind: 'up', msg: `¡Sube peso! Próxima sesión: ${nw} kg (+${+(nw - w).toFixed(1)}).` };
+      return { e1rm, fails: 0, w: nw, kind: 'up', msg: `Completaste todas las series. Próxima sesión: ${load(ex.id, nw)} (+${+(nw - w).toFixed(1)} kg).` };
     }
     if (reps.some((r) => r < ex.lo)) {
       const fails = (lift.fails || 0) + 1;
       if (fails >= 2) {
         const nw = Math.max(EX[ex.id][3] === 'bb' ? 20 : 0, Math.min(roundW(ex.id, w * 0.9), w - step(ex.id)));
-        return { e1rm, fails: 0, w: nw, kind: 'down', msg: `2 sesiones bajo ${ex.lo} reps: baja a ${nw} kg y vuelve a construir.` };
+        return { e1rm, fails: 0, w: nw, kind: 'down', msg: `Dos sesiones seguidas por debajo de ${ex.lo} reps. Próxima sesión: ${load(ex.id, nw)} para volver a subir desde ahí.` };
       }
-      return { e1rm, fails, w, kind: 'hold', msg: `Bajo el rango: repite ${w} kg. Si vuelve a pasar, bajamos un 10%.` };
+      return { e1rm, fails, w, kind: 'hold', msg: `Alguna serie quedó por debajo de ${ex.lo} reps. Repite ${load(ex.id, w)}; si vuelve a pasar, bajaremos el peso un 10%.` };
     }
-    return { e1rm, fails: 0, w, kind: 'hold', msg: `Mantén ${w} kg y suma reps hasta ${thr} en todas las series.` };
+    return { e1rm, fails: 0, w, kind: 'hold', msg: `Repite ${load(ex.id, w)}. Cuando hagas ${thr} reps en todas las series, subirá el peso.` };
   }
 
   function applySession(S, ses, repsByEx, today) {
