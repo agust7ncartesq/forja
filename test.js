@@ -94,4 +94,29 @@ const Sx = { profile: p, plan: WT.buildPlan(p), sessions: [], lifts: { bench: { 
 assert(C.insights(Sx, '2026-01-20').some((i) => /Estancado/.test(i.title)));
 assert(Object.keys(WT.EX).every((id) => C.CUES[id])); // técnica para todos los ejercicios
 
+// Importación: el estado se reconstruye y nada peligroso sobrevive
+const evil = {
+  profile: { goal: 'hipertrofia', days: '4', minutes: 60, level: 'intermedio', sex: 'm', bw: '80"><img src=x onerror=alert(1)>', start: '2026-01-05' },
+  plan: [{ exercises: [{ id: 'dbbench' }, { id: '__proto__' }] }],
+  next: '2',
+  lifts: { bench: { w: 60, log: [{ d: "2026-01-05'><script>x</script>", w: 60, r: [10] }, { d: '2026-01-07', w: 60, r: ['<img onerror=1>', 9] }] }, constructor: { w: 1 } },
+  sessions: [{ date: '2026-01-05', day: 'Torso A' }, { date: 'nope' }],
+  checkins: { '2026-01-05': { sleep: 8, energy: 'x', soreness: 2, stress: 9 } },
+  bwlog: [{ d: '2026-01-05', kg: '<b>' }, { d: '2026-01-06', kg: 79.5 }],
+};
+const clean = WT.sanitizeState(evil, '2026-02-01');
+const flat = JSON.stringify(clean);
+assert(!/[<>"]img|script|onerror/.test(flat), 'no queda HTML del archivo');
+assert.strictEqual(clean.profile.bw, 70); // valor inválido: por defecto
+assert.strictEqual(clean.profile.days, 4);
+assert.strictEqual(clean.next, 2);
+assert.strictEqual(clean.plan[0].exercises[0].id, 'dbbench'); // cambio válido conservado
+assert(!('constructor' in clean.lifts) || clean.lifts.constructor === Object); // claves desconocidas fuera
+assert.deepStrictEqual(clean.lifts.bench.log.map((x) => x.r), [[9]]);
+assert.strictEqual(clean.sessions.length, 1);
+assert.strictEqual(clean.checkins['2026-01-05'].energy, 3);
+assert.deepStrictEqual(clean.bwlog, [{ d: '2026-01-06', kg: 79.5 }]);
+assert.throws(() => WT.sanitizeState({ profile: { goal: 'x' } }, '2026-02-01'));
+assert.strictEqual(WT.sanitizeState({ profile: { goal: 'fuerza' }, next: 99 }, '2026-02-01').next, 0);
+
 console.log('OK: todos los tests pasan');

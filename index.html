@@ -3,12 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
 <meta name="theme-color" content="#0b0d08">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Forja">
 <meta name="description" content="Forja: tu entrenador de gimnasio. Rutinas a medida, pesos automáticos y rachas.">
 <title>Forja · Entrenador</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icon.svg">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
 <link rel="preload" href="assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <script src="vendor/chart.umd.min.js" defer></script>
 <style>
@@ -155,7 +160,7 @@ summary .mini svg{width:14px;height:14px;fill:none;stroke:var(--text);stroke-wid
 .plates{display:flex;align-items:center;gap:3px;flex-wrap:wrap}
 .plate{display:inline-grid;place-items:center;border-radius:3px;font:800 9px var(--font);color:var(--ink)}
 .bar{width:24px;height:6px;background:#9aa092;border-radius:2px}
-select,input{font:600 14px var(--font);color:var(--text);background:var(--s2);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+select,input{font:600 16px var(--font);color:var(--text);background:var(--s2);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
 select:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
 .btn{display:block;width:100%;border:0;border-radius:999px;padding:16px;font:800 15px var(--font);background:var(--lime);color:var(--ink);margin-top:14px;text-align:center;transition:transform .1s}
 .btn:active{transform:scale(.98)}
@@ -383,8 +388,12 @@ function onboarding() {
     <article class="cell c4 reveal"><div class="mini-ready" aria-hidden="true"><div class="rscore media"><b>58</b><small>de 100</small></div><span class="mute">Dormiste 6 h</span></div>
       <div class="body"><h3>Un coach que lee tu día</h3><p>Con un check-in de 20 segundos, si llegas cansado la sesión se aligera sola.</p></div></article>
   </div>
-  <div id="setup" class="setup-wrap" style="padding-top:12px">${sec('Configura tu entrenador')}<div class="card">${profileForm({}, 'Crear mi rutina')}</div></div>`;
+  <div id="setup" class="setup-wrap" style="padding-top:12px">${iosHint()}${sec('Configura tu entrenador')}<div class="card">${profileForm({}, 'Crear mi rutina')}</div></div>`;
 }
+// iOS no muestra un botón de instalar: se explica cómo añadirla a la pantalla de inicio.
+const isIOS = () => /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isInstalled = () => navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
+const iosHint = () => (isIOS() && !isInstalled() ? `<div class="card insight info"><span class="ik">${svg(I.info)}</span><div><b>Instálala en tu iPhone</b><p class="mute">En Safari, toca el botón Compartir y luego "Añadir a pantalla de inicio". Así se abre a pantalla completa, funciona sin conexión y tus datos quedan a salvo.</p></div></div>` : '');
 // Revela las celdas al entrar en pantalla.
 function revealOnScroll() {
   const els = document.querySelectorAll('.reveal:not(.in)');
@@ -427,7 +436,7 @@ function saveProfile() {
 }
 
 function perfil() {
-  return `${header('Perfil')}<p class="mute" style="margin:0 0 12px">Al guardar rehacemos tu rutina con estos datos y empiezas por el día 1. Tus pesos, historial y rachas se conservan. Los ejercicios que cambiaste a mano vuelven a los de la rutina.</p>
+  return `${header('Perfil')}${iosHint()}<p class="mute" style="margin:0 0 12px">Al guardar rehacemos tu rutina con estos datos y empiezas por el día 1. Tus pesos, historial y rachas se conservan. Los ejercicios que cambiaste a mano vuelven a los de la rutina.</p>
   <div class="card">${profileForm(S.profile, 'Guardar y rehacer rutina')}</div>
   ${sec('Tus datos')}<div class="card"><p class="mute" style="margin:0">Tus datos se guardan solo en este navegador. Si lo borras o cambias de móvil, los pierdes. Exporta una copia y guárdala donde quieras; para recuperarla, usa Importar copia.</p>
     <button class="btn" onclick="exportData()">Exportar copia (.json)</button>
@@ -436,19 +445,28 @@ function perfil() {
 }
 
 function exportData() {
+  const name = `forja-${today()}.json`, json = JSON.stringify(S, null, 1);
+  const file = typeof File === 'function' ? new File([json], name, { type: 'application/json' }) : null;
+  // En iPhone (sobre todo instalada en la pantalla de inicio) la descarga directa no funciona: se usa Compartir > Guardar en Archivos.
+  if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+    navigator.share({ files: [file], title: 'Copia de Forja' }).catch((e) => { if (e.name !== 'AbortError') downloadJSON(json, name); });
+    return;
+  }
+  downloadJSON(json, name);
+}
+function downloadJSON(json, name) {
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([JSON.stringify(S, null, 1)], { type: 'application/json' }));
-  a.download = `forja-${today()}.json`; a.click(); URL.revokeObjectURL(a.href);
+  a.href = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+  a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000); // revocar antes cancela la descarga en Safari
 }
 function importData(file) {
   if (!file) return;
+  if (file.size > 2e6) return alert('Ese archivo es demasiado grande para ser una copia de Forja. Elige el .json que descargaste con Exportar copia.');
   file.text().then((t) => {
-    const d = JSON.parse(t);
-    if (!d.profile || !E.GOALS[d.profile.goal] || !Array.isArray(d.plan) || !Array.isArray(d.sessions)) throw new Error('formato');
-    d.plan.forEach((day) => day.exercises.forEach((e) => { if (!E.EX[e.id]) throw new Error('ejercicio desconocido'); }));
-    d.lifts = Object.fromEntries(Object.entries(d.lifts || {}).filter(([k]) => E.EX[k]));
+    const d = E.sanitizeState(JSON.parse(t), today());
     if (!confirm('¿Reemplazar tus datos por los de la copia? Perderás lo que tengas ahora en este navegador.')) return;
-    S = d; delete S.active; save(); go('hoy');
+    S = d; save(); go('hoy');
   }).catch(() => alert('No pudimos leer ese archivo como una copia de Forja. Elige el archivo .json que descargaste con Exportar copia.'));
 }
 function resetAll() {
@@ -541,7 +559,7 @@ function finish() {
   const missing = ses.exercises.filter((e, i) => !(A.reps[i] || []).some((v) => v !== '' && v != null)).length;
   if (missing === ses.exercises.length) return alert('Anota las reps de al menos una serie para terminar la sesión.');
   if (missing && !confirm(missing === 1 ? '1 ejercicio no tiene series anotadas y no contará para tu progreso. ¿Terminar la sesión igual?' : `${missing} ejercicios no tienen series anotadas y no contarán para tu progreso. ¿Terminar la sesión igual?`)) return;
-  ses.exercises.forEach((e, i) => { if (A.w[i] != null) e.w = A.w[i]; });
+  ses.exercises.forEach((e, i) => { if (A.w[i] != null) e.w = A.w[i]; e.sets = Math.max(e.sets, (A.reps[i] || []).length); });
   const vol = ses.exercises.reduce((s, e, i) => s + (A.reps[i] || []).reduce((a, r) => a + (+r || 0), 0) * e.w, 0);
   const res = E.applySession(S, ses, A.reps, today(), { rir: A.rir, pain: A.pain });
   delete S.active; save(); stopTimer();
@@ -658,6 +676,7 @@ function tick() {
 }
 function stopTimer() { clearInterval(tInt); $('timer').style.display = 'none'; }
 
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
 render();
 </script>

@@ -14,8 +14,12 @@ make serve
 
 ## Instalar en el móvil
 
-Publica la carpeta en cualquier hosting estático con HTTPS (Netlify Drop, GitHub Pages, Vercel, Cloudflare Pages).
-Abre la URL en el móvil y elige "Añadir a pantalla de inicio". Funciona sin conexión.
+App publicada: https://agust7ncartesq.github.io/forja/
+
+- **iPhone / iPad:** abre la URL en Safari, toca Compartir y luego "Añadir a pantalla de inicio". Se abre a pantalla completa, funciona sin conexión y la app pide a Safari que no borre tus datos.
+- **Android:** Chrome ofrece "Instalar app" desde el menú.
+
+Las copias de seguridad (Perfil > Exportar copia) usan la hoja Compartir en el móvil: elige "Guardar en Archivos".
 
 Al publicar cambios, sube `CACHE` en `sw.js` (por ejemplo `forja-v7`) para que los móviles descarguen la nueva versión.
 

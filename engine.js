@@ -250,6 +250,52 @@ const WT = (() => {
   const group = (id) => EX[id][1].split('/')[0].split(' (')[0];
   const alternatives = (id) => Object.keys(EX).filter((k) => k !== id && group(k) === group(id) && EX[k][2] === EX[id][2]);
 
-  return { EX, GOALS, GUIDE, PRINCIPLES, buildPlan, nextSession, progress, applySession, streaks, weeklySets, startWeight, plates, warmup, alternatives, dnum, roundW, isDeload };
+  // Reconstruye un estado importado campo a campo: solo tipos y rangos válidos.
+  // Nada del archivo llega a la interfaz sin pasar por aquí (evita XSS y estados que rompen la app).
+  function sanitizeState(d, today) {
+    const num = (v, lo, hi, def) => { const n = typeof v === 'number' ? v : typeof v === 'string' && v.trim() !== '' ? +v : NaN; return Number.isFinite(n) && n >= lo && n <= hi ? n : def; };
+    const date = (v) => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null);
+    const p = d && d.profile;
+    if (!p || !GOALS[p.goal]) throw new Error('formato');
+    const profile = {
+      goal: p.goal,
+      days: Math.round(num(p.days, 1, 6, 3)),
+      minutes: [30, 45, 60, 75, 90, 120].includes(+p.minutes) ? +p.minutes : 60,
+      level: ['principiante', 'intermedio', 'avanzado'].includes(p.level) ? p.level : 'principiante',
+      sex: p.sex === 'f' ? 'f' : 'm',
+      bw: num(p.bw, 30, 250, 70),
+      age: num(p.age, 14, 90, null),
+      height: num(p.height, 120, 230, null),
+      start: date(p.start) || today,
+    };
+    // El plan se regenera; solo se conservan los cambios de ejercicio que sean ids conocidos.
+    const plan = buildPlan(profile);
+    if (Array.isArray(d.plan)) plan.forEach((day, i) => day.exercises.forEach((e, j) => {
+      const id = d.plan[i] && Array.isArray(d.plan[i].exercises) && d.plan[i].exercises[j] && d.plan[i].exercises[j].id;
+      if (typeof id === 'string' && Object.prototype.hasOwnProperty.call(EX, id)) e.id = id;
+    }));
+    const lifts = {};
+    Object.entries(d.lifts && typeof d.lifts === 'object' ? d.lifts : {}).forEach(([id, l]) => {
+      if (!Object.prototype.hasOwnProperty.call(EX, id) || !l || typeof l !== 'object') return;
+      const log = (Array.isArray(l.log) ? l.log : []).map((x) => x && ({
+        d: date(x.d), w: num(x.w, 0, 500, null),
+        r: (Array.isArray(x.r) ? x.r : []).map((r) => num(r, 0, 100, null)).filter((r) => r !== null).map(Math.round),
+        ...(num(x.rir, 0, 4, null) !== null ? { rir: Math.round(x.rir) } : {}),
+        ...(x.pain === true ? { pain: true } : {}),
+      })).filter((x) => x && x.d && x.w !== null && x.r.length).slice(-30);
+      lifts[id] = { w: num(l.w, 0, 500, 0), hi: num(l.hi, 1, 30, undefined), fails: Math.round(num(l.fails, 0, 10, 0)), e1rm: num(l.e1rm, 0, 1000, 0), log };
+    });
+    const sessions = (Array.isArray(d.sessions) ? d.sessions : []).filter((x) => x && date(x.date))
+      .map((x) => ({ date: x.date, day: typeof x.day === 'string' ? x.day.slice(0, 60) : '' })).slice(-2000);
+    const checkins = {};
+    Object.entries(d.checkins && typeof d.checkins === 'object' ? d.checkins : {}).forEach(([k, c]) => {
+      if (date(k) && c && typeof c === 'object') checkins[k] = { sleep: num(c.sleep, 3, 12, 7), energy: Math.round(num(c.energy, 1, 5, 3)), soreness: Math.round(num(c.soreness, 1, 5, 2)), stress: Math.round(num(c.stress, 1, 5, 2)) };
+    });
+    const bwlog = (Array.isArray(d.bwlog) ? d.bwlog : []).filter((x) => x && date(x.d) && num(x.kg, 30, 250, null) !== null)
+      .map((x) => ({ d: x.d, kg: +x.kg })).slice(-120);
+    return { profile, plan, next: Math.round(num(d.next, 0, plan.length - 1, 0)), lifts, sessions, checkins, bwlog };
+  }
+
+  return { sanitizeState, EX, GOALS, GUIDE, PRINCIPLES, buildPlan, nextSession, progress, applySession, streaks, weeklySets, startWeight, plates, warmup, alternatives, dnum, roundW, isDeload };
 })();
 if (typeof module !== 'undefined') module.exports = WT;
