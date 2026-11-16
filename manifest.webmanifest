@@ -1,0 +1,13 @@
+{
+  "name": "Forja · Entrenador",
+  "short_name": "Forja",
+  "description": "Rutinas a medida, pesos automáticos y rachas de gimnasio.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0d08",
+  "theme_color": "#0b0d08",
+  "lang": "es",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

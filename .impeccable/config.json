@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "index.html"
+        ],
+        "createdAt": "2026-11-16T19:45:03.462Z",
+        "reason": "Claude: the olive glow at the bottom of the page reproduces the Dribbble sports-app reference the user asked to follow"
+      }
+    ]
+  }
+}
