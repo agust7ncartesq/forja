@@ -15,7 +15,7 @@ const COACH = (() => {
     const act = (p.days <= 2 ? 1.375 : p.days <= 4 ? 1.465 : p.days === 5 ? 1.55 : 1.65) + (p.minutes - 60) / 600;
     const tdee = bmr * act;
     const kcal = {
-      definicion: Math.max(tdee * 0.8, tdee - 500), // ~0,5–1 % del peso por semana (Helms 2014)
+      definicion: Math.max(tdee * 0.8, tdee - 500), // ~0,5-1 % del peso por semana (Helms 2014)
       hipertrofia: tdee + 250,
       fuerza: tdee + 150,
       resistencia: tdee,
@@ -31,7 +31,7 @@ const COACH = (() => {
   }
 
   /* ---------- Preparación diaria (autorregulación) ---------- */
-  // c: { sleep: horas, energy 1–5 (5 = mucha), soreness 1–5 (5 = muy cargado), stress 1–5 (5 = alto) }
+  // c: { sleep: horas, energy 1-5 (5 = mucha), soreness 1-5 (5 = muy cargado), stress 1-5 (5 = alto) }
   function readiness(c) {
     const sl = Math.min(1, Math.max(0, (c.sleep - 4) / 4)); // 4 h = 0, 8 h o más = 1
     const score = Math.round(100 * (0.35 * sl + 0.25 * ((c.energy - 1) / 4) + 0.2 * ((5 - c.soreness) / 4) + 0.2 * ((5 - c.stress) / 4)));
@@ -97,8 +97,8 @@ const COACH = (() => {
     const tr = bwTrend(S.bwlog || [], today), n = nutrition(p);
     if (tr && n) {
       const [lo, hi] = n.rate;
-      if (tr.pct < lo) out.push({ kind: 'warn', title: 'Bajas de peso demasiado rápido', text: `${es(tr.pct)} % en la última semana. ${p.goal === 'definicion' ? 'Más de un 1 % semanal arriesga músculo: ' : 'Para tu objetivo, '}sube unas 150–200 kcal al día.` });
-      else if (tr.pct > hi) out.push({ kind: 'warn', title: p.goal === 'definicion' ? 'No estás bajando de peso' : 'Subes de peso demasiado rápido', text: `+${es(tr.pct)} % en la última semana. Baja unas 150–200 kcal al día y revisa en una semana.` });
+      if (tr.pct < lo) out.push({ kind: 'warn', title: 'Bajas de peso demasiado rápido', text: `${es(tr.pct)} % en la última semana. ${p.goal === 'definicion' ? 'Más de un 1 % semanal arriesga músculo: ' : 'Para tu objetivo, '}sube unas 150-200 kcal al día.` });
+      else if (tr.pct > hi) out.push({ kind: 'warn', title: p.goal === 'definicion' ? 'No estás bajando de peso' : 'Subes de peso demasiado rápido', text: `+${es(tr.pct)} % en la última semana. Baja unas 150-200 kcal al día y revisa en una semana.` });
       else out.push({ kind: 'ok', title: 'Peso en buen ritmo', text: `${tr.pct > 0 ? '+' : ''}${es(tr.pct)} % en la última semana, dentro de lo recomendado para tu objetivo.` });
     }
     // Descarga la semana que viene
@@ -131,7 +131,7 @@ const COACH = (() => {
     pullup: [['Empieza colgado con los brazos estirados', 'Pecho hacia la barra, codos hacia los bolsillos', 'Baja controlado hasta estirar del todo'], 'Medias repeticiones y balanceo'],
     legext: [['Rodilla alineada con el eje de la máquina', 'Sube sin despegar la cadera', 'Pausa arriba, baja en 2 segundos'], 'Patear el peso y dejarlo caer'],
     legcurl: [['Cadera pegada al banco', 'Flexiona hasta el máximo recorrido', 'Baja controlado hasta casi estirar'], 'Levantar la cadera para ayudarse'],
-    calf: [['Baja el talón hasta el máximo estiramiento', 'Pausa de 1–2 s abajo', 'Sube hasta la punta sin rebotar'], 'Rebotar con recorridos cortos'],
+    calf: [['Baja el talón hasta el máximo estiramiento', 'Pausa de 1-2 s abajo', 'Sube hasta la punta sin rebotar'], 'Rebotar con recorridos cortos'],
     lateral: [['Codos ligeramente flexionados', 'Sube hacia los lados hasta la altura del hombro', 'Baja lento, sin balanceo'], 'Encoger los trapecios y usar impulso'],
     facepull: [['Polea a la altura de la cara', 'Tira hacia la frente separando las manos', 'Codos altos, junta los omóplatos'], 'Tirar con la espalda baja inclinándose'],
     curl: [['Codos quietos junto al torso', 'Gira la palma hacia arriba al subir', 'Baja hasta estirar el brazo'], 'Balancear el cuerpo para subir'],
@@ -145,15 +145,15 @@ const COACH = (() => {
 
   /* ---------- Biblioteca basada en evidencia ---------- */
   const ARTICLES = [
-    { t: 'Qué tan cerca del fallo', b: 'Para ganar músculo conviene terminar las series cerca del fallo: el crecimiento mejora a medida que quedan menos reps en reserva. La fuerza, en cambio, mejora parecido con un rango amplio de reps en reserva. Por eso Forja pide dejar 0–2 reps en hipertrofia y 1–2 en fuerza.', ref: 'Robinson et al., 2024, Sports Medicine' },
-    { t: 'Cuántas series a la semana', b: 'Más series semanales dan más crecimiento, con rendimientos decrecientes. Unas 4 series por músculo ya producen un efecto medible; 10–20 rinden más en personas con experiencia. Las series de ejercicios que trabajan el músculo de forma indirecta cuentan como media serie. Con el mismo volumen, la frecuencia apenas cambia el crecimiento, aunque sí ayuda a la fuerza.', ref: 'Pelland et al., meta-regresión (67 estudios)' },
-    { t: 'Descanso entre series', b: 'Descansar más de 60–90 segundos da una ligera ventaja para ganar músculo, porque mantienes más peso y reps en las series siguientes. Más allá de 90 segundos no se ven diferencias claras; en ejercicios pesados de varias articulaciones, 2–3 minutos ayudan a rendir.', ref: 'Singer et al., 2024, Frontiers in Sports and Active Living' },
-    { t: 'Rango de movimiento', b: 'Trabajar el músculo en posición estirada parece favorecer el crecimiento: las repeticiones parciales en la parte estirada superan a las parciales en la parte acortada y se igualan o superan al recorrido completo. Prioriza bajar del todo y controlar la parte estirada.', ref: 'Revisiones sistemáticas 2024–2026' },
-    { t: 'Proteína', b: 'El beneficio de la proteína para ganar masa muscular se estabiliza alrededor de 1,6 g por kg de peso al día; hasta 2,2 g/kg es una cifra prudente para asegurar el máximo, sobre todo en déficit. Repártela en 3–5 comidas.', ref: 'Morton et al., 2018, British Journal of Sports Medicine' },
+    { t: 'Qué tan cerca del fallo', b: 'Para ganar músculo conviene terminar las series cerca del fallo: el crecimiento mejora a medida que quedan menos reps en reserva. La fuerza, en cambio, mejora parecido con un rango amplio de reps en reserva. Por eso Forja pide dejar 0-2 reps en hipertrofia y 1-2 en fuerza.', ref: 'Robinson et al., 2024, Sports Medicine' },
+    { t: 'Cuántas series a la semana', b: 'Más series semanales dan más crecimiento, con rendimientos decrecientes. Unas 4 series por músculo ya producen un efecto medible; 10-20 rinden más en personas con experiencia. Las series de ejercicios que trabajan el músculo de forma indirecta cuentan como media serie. Con el mismo volumen, la frecuencia apenas cambia el crecimiento, aunque sí ayuda a la fuerza.', ref: 'Pelland et al., meta-regresión (67 estudios)' },
+    { t: 'Descanso entre series', b: 'Descansar más de 60-90 segundos da una ligera ventaja para ganar músculo, porque mantienes más peso y reps en las series siguientes. Más allá de 90 segundos no se ven diferencias claras; en ejercicios pesados de varias articulaciones, 2-3 minutos ayudan a rendir.', ref: 'Singer et al., 2024, Frontiers in Sports and Active Living' },
+    { t: 'Rango de movimiento', b: 'Trabajar el músculo en posición estirada parece favorecer el crecimiento: las repeticiones parciales en la parte estirada superan a las parciales en la parte acortada y se igualan o superan al recorrido completo. Prioriza bajar del todo y controlar la parte estirada.', ref: 'Revisiones sistemáticas 2024-2026' },
+    { t: 'Proteína', b: 'El beneficio de la proteína para ganar masa muscular se estabiliza alrededor de 1,6 g por kg de peso al día; hasta 2,2 g/kg es una cifra prudente para asegurar el máximo, sobre todo en déficit. Repártela en 3-5 comidas.', ref: 'Morton et al., 2018, British Journal of Sports Medicine' },
     { t: 'Perder grasa sin perder músculo', b: 'Baja entre un 0,5 % y un 1 % de tu peso por semana. Cuanto mayor es el déficit, mayor parte del peso perdido es músculo. Mantén el entrenamiento pesado y la proteína alta.', ref: 'Helms et al., 2014, JISSN; Garthe et al., 2011' },
-    { t: 'Creatina', b: 'El monohidrato de creatina es el suplemento con más evidencia: mejora la fuerza y la ganancia muscular con el entrenamiento. Dosis: 3–5 g al día, todos los días, sin necesidad de fase de carga ni de descansos. Es segura en personas sanas a esas dosis.', ref: 'Kreider et al., 2017, posición de la ISSN' },
-    { t: 'Descargas', b: 'Una descarga es un periodo corto de menos estrés (menos series, menos carga o menos esfuerzo) para disipar fatiga física y mental y volver a progresar. Los entrenadores de fuerza y físico la programan cada 4–8 semanas o cuando el rendimiento cae.', ref: 'Bell et al., 2023, consenso Delphi, Sports Medicine – Open' },
-    { t: 'Sueño y recuperación', b: 'Dormir 7–9 horas es la base de la recuperación. Dormir poco reduce el rendimiento y la capacidad de entrenar duro. Si una noche duermes mal, el check-in de Forja aligera la sesión.', ref: 'Recomendación general de sociedades de medicina del sueño' },
+    { t: 'Creatina', b: 'El monohidrato de creatina es el suplemento con más evidencia: mejora la fuerza y la ganancia muscular con el entrenamiento. Dosis: 3-5 g al día, todos los días, sin necesidad de fase de carga ni de descansos. Es segura en personas sanas a esas dosis.', ref: 'Kreider et al., 2017, posición de la ISSN' },
+    { t: 'Descargas', b: 'Una descarga es un periodo corto de menos estrés (menos series, menos carga o menos esfuerzo) para disipar fatiga física y mental y volver a progresar. Los entrenadores de fuerza y físico la programan cada 4-8 semanas o cuando el rendimiento cae.', ref: 'Bell et al., 2023, consenso Delphi, Sports Medicine - Open' },
+    { t: 'Sueño y recuperación', b: 'Dormir 7-9 horas es la base de la recuperación. Dormir poco reduce el rendimiento y la capacidad de entrenar duro. Si una noche duermes mal, el check-in de Forja aligera la sesión.', ref: 'Recomendación general de sociedades de medicina del sueño' },
   ];
 
   return { nutrition, readiness, adjustSession, bwTrend, insights, CUES, ARTICLES, muscleGroup };

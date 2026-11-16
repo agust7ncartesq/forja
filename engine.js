@@ -61,22 +61,22 @@ const WT = (() => {
 
   // c/i = rango de reps compuesto/aislamiento, sc/si = series, rc/ri = descanso (s)
   const GOALS = {
-    fuerza: { name: 'Fuerza', c: [3, 5], i: [8, 12], sc: 4, si: 2, rc: 180, ri: 90, rir: '1–2' },
-    hipertrofia: { name: 'Hipertrofia', c: [6, 10], i: [10, 15], sc: 3, si: 3, rc: 120, ri: 75, rir: '0–2' },
-    resistencia: { name: 'Resistencia muscular', c: [12, 20], i: [15, 25], sc: 3, si: 2, rc: 60, ri: 45, rir: '2–3' },
-    definicion: { name: 'Definición', c: [6, 10], i: [12, 15], sc: 3, si: 3, rc: 90, ri: 60, rir: '1–2' },
-    general: { name: 'Salud / general', c: [8, 12], i: [12, 15], sc: 3, si: 2, rc: 90, ri: 60, rir: '2–3' },
+    fuerza: { name: 'Fuerza', c: [3, 5], i: [8, 12], sc: 4, si: 2, rc: 180, ri: 90, rir: '1-2' },
+    hipertrofia: { name: 'Hipertrofia', c: [6, 10], i: [10, 15], sc: 3, si: 3, rc: 120, ri: 75, rir: '0-2' },
+    resistencia: { name: 'Resistencia muscular', c: [12, 20], i: [15, 25], sc: 3, si: 2, rc: 60, ri: 45, rir: '2-3' },
+    definicion: { name: 'Definición', c: [6, 10], i: [12, 15], sc: 3, si: 3, rc: 90, ri: 60, rir: '1-2' },
+    general: { name: 'Salud / general', c: [8, 12], i: [12, 15], sc: 3, si: 2, rc: 90, ri: 60, rir: '2-3' },
   };
 
   const GUIDE = {
-    fuerza: ['Cargas de 80–90% 1RM en 3–5 reps; descansa 3–5 min para recuperar el sistema de fosfágenos.', 'La técnica en los básicos (sentadilla, banca, peso muerto, press militar) es la prioridad.', 'Deja 1–2 reps en reserva en los básicos: ir al fallo con cargas altas acumula fatiga sin más ganancia.', 'Proteína 1,6–2,2 g/kg y un ligero superávit calórico favorecen la fuerza.'],
-    hipertrofia: ['10–20 series efectivas por músculo y semana, repartidas en 2+ sesiones.', 'Entre 6 y 30 reps todo funciona si llegas cerca del fallo (RIR 0–2); el esfuerzo pesa más que el rango.', 'Superávit de 200–300 kcal, proteína 1,6–2,2 g/kg, sueño de 7–9 h.', 'Progresión doble: primero llevas todas las series al tope del rango, luego subes peso.'],
-    resistencia: ['12–25 reps con descansos cortos (30–60 s) para tolerar la fatiga metabólica.', 'Añade 2–3 sesiones semanales de cardio en zona 2 (30–45 min).', 'Carbohidratos suficientes para rendir (3–5 g/kg).'],
-    definicion: ['Mantén las cargas pesadas: el estímulo que construyó el músculo es el que lo conserva en déficit.', 'Déficit de 300–500 kcal (perder 0,5–1% del peso por semana), proteína 2,0–2,4 g/kg.', '8–10k pasos al día; cardio moderado sin robar recuperación a las pesas.', 'Si tu rendimiento cae 2 semanas seguidas, sube calorías o haz una descarga.'],
-    general: ['OMS: 150–300 min/semana de actividad aeróbica + fuerza 2 días o más.', 'Prioriza constancia y técnica por encima de la carga.', 'Proteína de 1,2–1,6 g/kg y sueño regular.'],
+    fuerza: ['Cargas de 80-90% 1RM en 3-5 reps; descansa 3-5 min para recuperar el sistema de fosfágenos.', 'La técnica en los básicos (sentadilla, banca, peso muerto, press militar) es la prioridad.', 'Deja 1-2 reps en reserva en los básicos: ir al fallo con cargas altas acumula fatiga sin más ganancia.', 'Proteína 1,6-2,2 g/kg y un ligero superávit calórico favorecen la fuerza.'],
+    hipertrofia: ['10-20 series efectivas por músculo y semana, repartidas en 2+ sesiones.', 'Entre 6 y 30 reps todo funciona si llegas cerca del fallo (RIR 0-2); el esfuerzo pesa más que el rango.', 'Superávit de 200-300 kcal, proteína 1,6-2,2 g/kg, sueño de 7-9 h.', 'Progresión doble: primero llevas todas las series al tope del rango, luego subes peso.'],
+    resistencia: ['12-25 reps con descansos cortos (30-60 s) para tolerar la fatiga metabólica.', 'Añade 2-3 sesiones semanales de cardio en zona 2 (30-45 min).', 'Carbohidratos suficientes para rendir (3-5 g/kg).'],
+    definicion: ['Mantén las cargas pesadas: el estímulo que construyó el músculo es el que lo conserva en déficit.', 'Déficit de 300-500 kcal (perder 0,5-1% del peso por semana), proteína 2,0-2,4 g/kg.', '8-10k pasos al día; cardio moderado sin robar recuperación a las pesas.', 'Si tu rendimiento cae 2 semanas seguidas, sube calorías o haz una descarga.'],
+    general: ['OMS: 150-300 min/semana de actividad aeróbica + fuerza 2 días o más.', 'Prioriza constancia y técnica por encima de la carga.', 'Proteína de 1,2-1,6 g/kg y sueño regular.'],
   };
   const PRINCIPLES = [
-    'Calienta 5–8 min y haz 2–3 series de aproximación en el primer ejercicio compuesto.',
+    'Calienta 5-8 min y haz 2-3 series de aproximación en el primer ejercicio compuesto.',
     'Sobrecarga progresiva: la app sube el peso cuando completas todas las series en el tope del rango (principiantes: en la mitad del rango).',
     'Si quedas bajo el mínimo del rango 2 sesiones seguidas, la app baja la carga un 10% (descarga reactiva).',
     'Descarga programada cada 6 semanas (intermedio) o cada 5 (avanzado): mitad de series y −10% de carga.',

@@ -184,12 +184,47 @@ select:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visi
 .goal input:checked+div small{color:#3b4220}
 .field{margin-top:16px}
 .lbl{display:block;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin-bottom:8px}
-/* Onboarding */
-.onb{text-align:center;padding-top:6px}
-.onb img{width:min(330px,82%);height:auto;aspect-ratio:1;object-fit:cover;border-radius:50%;display:block;margin:6px auto 0;-webkit-mask-image:radial-gradient(circle,#000 58%,transparent 71%);mask-image:radial-gradient(circle,#000 58%,transparent 71%)}
-.onb h1{font-size:40px;line-height:1;text-transform:uppercase;margin-top:6px;letter-spacing:-.02em}
-.onb h1 span{color:var(--lime)}
-.onb .tagline{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin:12px 0 0}
+/* Bienvenida (landing). Forma: tarjetas 24px, botones píldora. */
+main.wide{max-width:1120px}
+.ohero{display:grid;gap:22px;align-items:center;padding-top:4px}
+.ohero .logo{margin-bottom:18px}
+.ohero h1{font-size:clamp(34px,6.4vw,64px);line-height:1.02;letter-spacing:-.03em;text-transform:uppercase;text-wrap:balance}
+.ohero h1 span{color:var(--lime)}
+.ohero .lead{color:#c9cfbb;font-size:16px;line-height:1.55;max-width:42ch;margin:16px 0 0}
+.ohero .btn{width:auto;display:inline-block;padding:16px 30px;margin-top:22px}
+.ohero figure{margin:0;border-radius:28px;overflow:hidden;background:var(--s1);aspect-ratio:1;order:-1}
+.ohero figure img{width:100%;height:100%;object-fit:cover;display:block}
+.bento{display:grid;gap:12px}
+.cell{border-radius:24px;overflow:hidden;position:relative;background:var(--s1);border:1px solid var(--line);min-height:220px;display:flex;flex-direction:column}
+.cell h3{font-size:19px;line-height:1.15}
+.cell p{margin:6px 0 0;font-size:13.5px;line-height:1.5;color:#c9cfbb;max-width:38ch}
+.cell .body{padding:18px}
+.cell.photo{justify-content:flex-end;min-height:360px}
+.cell.photo>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cell.photo:after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,13,8,0) 30%,rgba(11,13,8,.92) 100%)}
+.cell.photo .body{position:relative;z-index:1}
+.cell.lime{background:var(--lime);border-color:var(--lime);color:var(--ink);justify-content:space-between}
+.cell.lime p{color:#3b4220}
+.cell.split>img{width:100%;height:220px;object-fit:cover;display:block}
+.mini-sets{display:flex;gap:8px;padding:18px 18px 0}
+.mini-sets span{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:var(--ink);color:var(--lime);font-weight:800;font-size:16px}
+.mini-ready{display:flex;align-items:center;gap:12px;padding:18px 18px 0}
+.reveal{transition:opacity .6s cubic-bezier(.16,1,.3,1),transform .6s cubic-bezier(.16,1,.3,1)}
+.io .reveal:not(.in){opacity:0;transform:translateY(18px)}
+.ohero .rise{animation:rise .7s cubic-bezier(.16,1,.3,1) both}
+.ohero .rise:nth-child(2){animation-delay:.06s}.ohero .rise:nth-child(3){animation-delay:.12s}.ohero .rise:nth-child(4){animation-delay:.18s}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.setup-wrap{max-width:560px}
+@media (min-width:860px){.ohero .lead{font-size:18px}}
+@media (min-width:860px){
+  .ohero{grid-template-columns:1.05fr .95fr;gap:48px;min-height:min(88dvh,760px)}
+  .ohero figure{order:0;aspect-ratio:4/4.4}
+  .bento{grid-template-columns:1.25fr 1fr 1fr;grid-template-rows:auto auto}
+  .bento .c1{grid-row:span 2;min-height:520px}
+  .bento .c3{grid-row:span 2}
+  .bento .c3>img{height:300px}
+}
+@media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none}}
 /* Tablas, listas, gráficas */
 table{width:100%;border-collapse:collapse;font-size:13px}
 td,th{padding:10px 4px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
@@ -223,6 +258,7 @@ ul{padding-left:18px;margin:6px 0}li{margin:7px 0;color:#d2d7c6;font-size:13px}
 nav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom));display:flex;gap:6px;padding:6px;border-radius:999px;
   background:rgba(31,35,23,.82);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.08);z-index:10;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 nav button{width:50px;height:50px;border-radius:50%;border:0;background:transparent;color:var(--mute);display:grid;place-items:center}
+nav button:active,.chip:active,.story:active,.seg span:active{transform:scale(.96)}
 nav button.on{background:var(--lime);color:var(--ink)}
 nav svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 #timer{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom));width:min(424px,calc(100% - 36px));display:none;align-items:center;gap:10px;
@@ -267,7 +303,7 @@ const I = {
   clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
 };
 const TABS = [['hoy', 'Inicio'], ['rutina', 'Rutina'], ['coach', 'Coach'], ['progreso', 'Progreso'], ['perfil', 'Perfil']];
-const GOAL_TXT = { fuerza: 'Mover más kilos: 3–5 reps pesadas', hipertrofia: 'Ganar músculo: 6–15 reps cerca del fallo', resistencia: 'Aguantar más: 12–25 reps', definicion: 'Perder grasa sin perder músculo', general: 'Salud y constancia' };
+const GOAL_TXT = { fuerza: 'Mover más kilos: 3-5 reps pesadas', hipertrofia: 'Ganar músculo: 6-15 reps cerca del fallo', resistencia: 'Aguantar más: 12-25 reps', definicion: 'Perder grasa sin perder músculo', general: 'Salud y constancia' };
 const DOW = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 const abbr = (name) => name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
 const sessionDates = () => S.sessions.map((s) => s.date);
@@ -293,7 +329,8 @@ const mixText = (day) => { const c = {}; day.exercises.forEach((e) => (c[GNAME[g
 
 function render() {
   charts.forEach((c) => c.destroy()); charts = [];
-  if (!S.profile) { $('nav').style.display = 'none'; $('app').innerHTML = `<div class="fade">${onboarding()}</div>`; return; }
+  $('app').classList.toggle('wide', !S.profile);
+  if (!S.profile) { $('nav').style.display = 'none'; $('app').innerHTML = onboarding(); revealOnScroll(); return; }
   $('nav').style.display = 'flex';
   $('nav').innerHTML = TABS.map(([k, l]) => `<button class="${tab === k ? 'on' : ''}" onclick="go('${k}')" aria-label="${l}" aria-current="${tab === k}">${svg(I[k])}</button>`).join('');
   $('app').innerHTML = `<div class="${anim ? 'fade' : ''}">${{ hoy, rutina, coach, progreso, perfil }[tab]()}</div>`; anim = false;
@@ -328,12 +365,36 @@ addEventListener('load', () => S.profile && drawCharts()); // Chart.js carga con
 
 /* ---------- Onboarding / perfil ---------- */
 function onboarding() {
-  return `<div class="onb"><div class="logo">FORJA<i>+</i></div>
-    <img src="assets/hero.jpg" alt="Mancuerna hexagonal iluminada en verde lima" width="900" height="900" fetchpriority="high">
-    <h1>Todo tu progreso<br><span>en vivo</span></h1>
-    <p class="tagline">Rutinas · Pesos · Rachas · Récords</p>
-    <button class="btn" onclick="$('setup').scrollIntoView({behavior:'smooth'})">Empezar</button></div>
-  <div id="setup" style="padding-top:20px">${sec('Configura tu entrenador')}<div class="card">${profileForm({}, 'Crear mi rutina')}</div></div>`;
+  return `<section class="ohero">
+    <div><div class="logo rise">FORJA<i>+</i></div>
+      <h1 class="rise">Tu entrenador, <span>en el bolsillo</span></h1>
+      <p class="lead rise">Armo tu rutina según tu objetivo, tus días y tu tiempo, y subo el peso cuando estás listo.</p>
+      <button class="btn rise" onclick="$('setup').scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'})">Crear mi rutina</button></div>
+    <figure><img src="assets/hero.jpg" alt="Mancuerna hexagonal negra iluminada en verde lima" width="900" height="900" fetchpriority="high"></figure>
+  </section>
+  ${sec('Qué hace Forja por ti')}
+  <div class="bento">
+    <article class="cell photo c1 reveal"><img src="assets/athlete.jpg" alt="Atleta haciendo sentadilla con barra en un gimnasio oscuro" loading="lazy" width="1100" height="828">
+      <div class="body"><h3>Una rutina hecha a tu medida</h3><p>Fuerza, hipertrofia, resistencia o definición, ajustada a tus días y a los minutos que tienes.</p></div></article>
+    <article class="cell lime c2 reveal"><div class="mini-sets" aria-hidden="true"><span>10</span><span>10</span><span>10</span></div>
+      <div class="body"><h3>El peso sube cuando toca</h3><p>Completas todas las series en el tope del rango y la próxima sesión ya trae más carga.</p></div></article>
+    <article class="cell split c3 reveal"><img src="assets/grip.jpg" alt="Manos con magnesio agarrando una barra" loading="lazy" width="678" height="900">
+      <div class="body"><h3>Técnica en cada ejercicio</h3><p>Tres claves de ejecución y el error más común, siempre a mano mientras entrenas.</p></div></article>
+    <article class="cell c4 reveal"><div class="mini-ready" aria-hidden="true"><div class="rscore media"><b>58</b><small>de 100</small></div><span class="mute">Dormiste 6 h</span></div>
+      <div class="body"><h3>Un coach que lee tu día</h3><p>Con un check-in de 20 segundos, si llegas cansado la sesión se aligera sola.</p></div></article>
+  </div>
+  <div id="setup" class="setup-wrap" style="padding-top:12px">${sec('Configura tu entrenador')}<div class="card">${profileForm({}, 'Crear mi rutina')}</div></div>`;
+}
+// Revela las celdas al entrar en pantalla.
+function revealOnScroll() {
+  const els = document.querySelectorAll('.reveal:not(.in)');
+  if (!els.length) return;
+  if (!('IntersectionObserver' in window) || matchMedia('(prefers-reduced-motion: reduce)').matches) { els.forEach((e) => e.classList.add('in')); return; }
+  document.documentElement.classList.add('io'); // solo se ocultan si el observador funciona
+  const show = (e) => e.classList.add('in');
+  const io = new IntersectionObserver((es) => es.forEach((x) => { if (x.isIntersecting) { show(x.target); io.unobserve(x.target); } }), { threshold: 0.15 });
+  els.forEach((e) => io.observe(e));
+  setTimeout(() => els.forEach(show), 3000); // red de seguridad: nunca quedan ocultas
 }
 
 function profileForm(p, label) {
@@ -444,9 +505,9 @@ function exCard(e, i, A) {
   return `<div class="card mcard"><h3>${E.EX[e.id][0]}<small>${done >= e.sets ? '<span class="donetag">Completado</span>' : done ? `<span class="livedot">Serie ${done + 1}/${e.sets}</span>` : mtag(e.id)}</small></h3>
     <div class="row"><div><div class="team">Peso</div><div class="wbox"><input type="number" inputmode="decimal" step="0.5" min="0" value="${w}" aria-label="Peso de ${E.EX[e.id][0]} en ${unit}" style="width:${String(w).length + 0.3}ch" oninput="this.style.width=(this.value.length+.3)+'ch'" onchange="setW(${i},this.value)"><small class="mute">${unit}</small></div></div>
       <div class="center"><b>${e.sets} series</b>descanso ${fmt(e.rest)}</div>
-      <div class="right"><div class="team">Reps</div><div class="big">${e.lo}–${e.hi}</div></div></div>
+      <div class="right"><div class="team">Reps</div><div class="big">${e.lo}-${e.hi}</div></div></div>
     <div class="sets">${Array.from({ length: e.sets }, (_, j) => { const v = reps[j] ?? '';
-      return `<div class="set"><input type="number" inputmode="numeric" min="0" max="100" placeholder="–" value="${v}" class="${cls(v, e)}" aria-label="Reps serie ${j + 1}, objetivo ${e.lo} a ${e.hi}" onchange="setRep(this,${i},${j},${e.rest},${e.lo})"><span>${j + 1}</span></div>`; }).join('')}</div>
+      return `<div class="set"><input type="number" inputmode="numeric" min="0" max="100" placeholder="-" value="${v}" class="${cls(v, e)}" aria-label="Reps serie ${j + 1}, objetivo ${e.lo} a ${e.hi}" onchange="setRep(this,${i},${j},${e.rest},${e.lo})"><span>${j + 1}</span></div>`; }).join('')}</div>
     <div class="effort"><span class="lbl" id="rir-l${i}">Reps que te sobraban en la última serie</span>${segs('rir' + i, [[0, '0'], [1, '1'], [2, '2'], [3, '3'], [4, '4+']], (A.rir || {})[i], 'sm').replace('<div class="seg sm">', `<div class="seg sm" role="radiogroup" aria-labelledby="rir-l${i}" onchange="setRir(${i},event.target.value)">`)}
       <label class="pain"><input type="checkbox" ${(A.pain || {})[i] ? 'checked' : ''} onchange="setPain(${i},this.checked)">Sentí molestia o dolor en este ejercicio</label></div>
     <details><summary>Técnica, calentamiento y alternativas<span class="mini">${svg(I.arrow)}</span></summary><div class="tools">
@@ -552,9 +613,9 @@ function rutina() {
   return `${header('Mi rutina')}
   <div class="chips"><span class="chip plain">${g.name}</span><span class="chip plain">${p.days} días</span><span class="chip plain">${p.minutes} min</span><span class="chip plain">${{ principiante: 'Novato', intermedio: 'Intermedio', avanzado: 'Avanzado' }[p.level]}</span></div>
   ${S.plan.map((d, i) => `${sec(`Día ${i + 1} · ${esc(d.name)}`, `<span class="${i === nx ? 'livedot' : 'mute'}">${i === nx ? 'Siguiente' : '~' + d.minutes + ' min'}</span>`)}
-    <div class="card"><table>${d.exercises.map((e) => `<tr><td><span class="dot" style="${gv(grp(e.id))}">${E.EX[e.id][0]}</span></td><td class="r">${e.sets}×${e.lo}–${e.hi}</td><td class="r m">${fmt(e.rest)}</td></tr>`).join('')}</table></div>`).join('')}
+    <div class="card"><table>${d.exercises.map((e) => `<tr><td><span class="dot" style="${gv(grp(e.id))}">${E.EX[e.id][0]}</span></td><td class="r">${e.sets}×${e.lo}-${e.hi}</td><td class="r m">${fmt(e.rest)}</td></tr>`).join('')}</table></div>`).join('')}
   ${sec('Volumen por músculo', '<span class="mute">series/semana</span>')}
-  <div class="card"><p class="mute" style="margin:0 0 6px">Para ganar músculo, la evidencia apunta a 10–20 series por músculo a la semana.</p>
+  <div class="card"><p class="mute" style="margin:0 0 6px">Para ganar músculo, la evidencia apunta a 10-20 series por músculo a la semana.</p>
     ${legend()}<table>${Object.entries(ws).sort((a, b) => b[1] - a[1]).map(([m, n]) => { const low = n < 10 && p.goal === 'hipertrofia';
       return `<tr><td><span class="dot" style="${gv(muscleGroup(m))}">${m}</span></td><td style="width:42%"><div class="vol"><i style="width:${(n / max) * 100}%;background:var(--${muscleGroup(m)})"></i></div></td><td class="r">${low ? `<span class="lowv" title="Menos de 10 series">${n} · bajo</span>` : n}</td></tr>`; }).join('')}</table></div>
   ${sec(`Claves: ${g.name}`)}<div class="card"><ul>${E.GUIDE[p.goal].map((t) => `<li>${t}</li>`).join('')}</ul></div>
@@ -583,7 +644,7 @@ function progreso() {
   ${rows.map(([id, l]) => { const x = l.log[l.log.length - 1];
     return `<div class="card mcard"><h3>${E.EX[id][0]}<small>${mtag(id)}</small></h3><div class="row"><div><div class="team">Próxima</div><div class="big">${l.w}<small>kg</small></div></div>
       <div class="center">Última, ${x.d.slice(8)}/${x.d.slice(5, 7)}<b>${x.w} kg × ${x.r.join(' / ')}</b></div>
-      <div class="right"><div class="team">Máximo est.</div><div class="big">${l.e1rm ? Math.round(l.e1rm) : '—'}<small>kg</small></div></div></div></div>`; }).join('')}
+      <div class="right"><div class="team">Máximo est.</div><div class="big">${l.e1rm ? Math.round(l.e1rm) : '-'}<small>kg</small></div></div></div></div>`; }).join('')}
   <p class="mute">Máximo estimado: el peso que podrías levantar una sola vez (1RM), calculado con la fórmula de Epley a partir de tu mejor serie de cada sesión.</p>`;
 }
 
