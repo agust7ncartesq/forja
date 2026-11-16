@@ -1,0 +1,16 @@
+# El Dockerfile copia archivos concretos; esto solo reduce el contexto de build.
+.git
+.github
+.impeccable
+.gitignore
+.dockerignore
+Dockerfile
+Makefile
+README.md
+*.md
+test.js
+scripts/
+_site/
+.DS_Store
+.env
+.env.*
